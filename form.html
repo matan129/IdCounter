@@ -3,10 +3,36 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Identity counter</title>
-    <script src="Validator.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#SubmitBtn').click(function (event) {
+                $.ajax({
+                    type: "POST",
+                    url: 'http://localhost',
+                    data: {
+                        bFirstName: $("form[name = 'bFirstName']").val(),
+                        bLastName: $("form[name = 'bLastName']").val(),
+                        sFirstName: $("form[name = 'sFirstName']").val(),
+                        sLastName: $("form[name = 'sLastName']").val(),
+                        bNameOnCard: $("form[name = 'bNameOnCard']").val()
+                    } ,
+                    dataType: "jsonp",
+                    jsonpCallback: "_testcb",
+                    cache: false,
+                    timeout: 5000,
+                    success: function(data) {
+                        $("#test").append(data);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        alert('Error connecting to the Node.js server... ' + textStatus + " " + errorThrown);
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 <body>
-<form name="checkoutForm">
+<form name="checkoutForm" method = "post" action="/">
     Billing First name:
     <input type="text" name="bFirstName">
     <br>
@@ -27,7 +53,8 @@
     <input type="text" name="sLastName">
     <br>
 
-    <input type="submit" value="Login" onClick="displayUniqueNames();" />
+    <button id="SubmitBtn" type="submit">Submit</button>
 </form>
+<div id="test"></div>
 </body>
 </html>
