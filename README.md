@@ -1,0 +1,1 @@
+[![Build Status](https://travis-ci.org/matan129/IdCounter.svg)](https://travis-ci.org/matan129/IdCounter)
