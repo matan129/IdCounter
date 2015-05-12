@@ -17,6 +17,9 @@ function countUniqueNames(billFirstName,billLastName,shipFirstName,shipLastName,
         'Last': shipLastName
     }
 
+    //setup names
+    var nameLines = getNameLines();
+
     //Separate the first names, which may contain middle names
     var billingNames = separateFirstName(billingID.FirstRaw);
     billingID.First = billingNames.FirstName;
@@ -36,17 +39,36 @@ function countUniqueNames(billFirstName,billLastName,shipFirstName,shipLastName,
 }
 
 //checks if two names mean the same according to our CSV list.
-function compareNicksNames(name1, name2)
+function checkIdenticalNames(name1, name2, names)
 {
     //TODO.
     return true;
 }
 
+function searchInNames(name, nameDb)
+
 //Splits a First+Middle name strings to separate strings.
-function separateFirstName(firstNameRaw)
+function separateFirstName(firstNameRaw, names)
 {
     var FN; //first name
     var MN; //last name
+
+    var words = firstNameRaw.split(' ');
+
+    //only first name.
+    if(words.length === 1) {
+        FN = words[0];
+    }
+    //middle name exists
+    else  {
+        FN = words[0];
+        MN = words[1];
+
+        //check that the first name is an actual first name.
+        //because our csv contains only first names we can leverage it for this test
+
+    }
+
 
     //TODO.
 
@@ -56,6 +78,27 @@ function separateFirstName(firstNameRaw)
     }
 }
 
+//get stuff from the csv
+function getNameLines() {
+    var allText;
+
+    //TODO convert this somehow to relative path
+    var file = "file:///C:/Users/Matan/Documents/Repositories/IdCounter/names.csv"
+
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+            if(rawFile.status === 200 || rawFile.status == 0)
+                allText = rawFile.responseText;
+
+    }
+
+    rawFile.send(null);
+    return allText.split('\n');
+}
 
 //just a wrapper function for the actual counter function.
 function displayUniqueNames() {
