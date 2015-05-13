@@ -38,7 +38,7 @@ describe('100 Random name tests', function() {
 
     for(var i = 0; i < 50; i++) {
         input = generateRandomTest(2);
-        it('Random input with 2 two identities \n ' + input.desc, function () {
+        it('Random input with 2 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
