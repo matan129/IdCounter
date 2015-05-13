@@ -1,6 +1,7 @@
 var assert = require('assert');
-var validator = require('../Validator.js');
+var validator = require('../validator.js');
 
+//"manual" tests
 describe('\"Deborah\" name tests', function() {
     it('Deborah Egli & Deborah Egli',  function () {
         assert.equal(validator.countUniqueNames("Deborah","Egli","Deborah","Egli","Deborah Egli"),1);
@@ -24,17 +25,24 @@ describe('\"Deborah\" name tests', function() {
 });
 
 
-/*describe('Random name tests', function() {
-    var input = generateRandomTest(1);
-    it('Random input with 1 identity \n ' + input.desc,  function () {
-        assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
-    });
+//random names tests
+describe('100 Random name tests', function() {
+    var input;
 
-    input = generateRandomTest(2);
-    it('Random input with 2 two identities \n ' + input.desc,  function () {
-        assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
-    });
-});*/
+    for(var i = 0; i < 50; i++) {
+        input = generateRandomTest(1);
+        it('Random input with 1 identity \n ' + input.desc, function () {
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
+        });
+    }
+
+    for(var i = 0; i < 50; i++) {
+        input = generateRandomTest(2);
+        it('Random input with 2 two identities \n ' + input.desc, function () {
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
+        });
+    }
+});
 
 function generateRandomTest(idNumber){
     //read data
@@ -43,139 +51,51 @@ function generateRandomTest(idNumber){
 
     //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
-    var fams = fs.readFileSync(firstAndMiddleCSV);
-    var lasts = fs.readFileSync(lastNamesCSV);
+    var famLines = fs.readFileSync(firstAndMiddleCSV).toString().split('\n');
+    var lastNames = fs.readFileSync(lastNamesCSV).toString().split('\r');
 
-    var famLines = fams.toString().split('\n');
-    var lastNames = lasts.toString().split('\r');
-
-    //determine test configuration (use middle name, short it, etc.)
-    var randomMiddle = Math.random();
-    var useMiddleName = randomMiddle > 0.5;
-
-    var randShortMiddle = Math.random();
-    var shortenMiddle = randShortMiddle > 0.5;
+    //remove control characters (like \r)
+    for(var i = 0; i < famLines.length; i++) {
+        famLines[i] = famLines[i].substr(0,famLines[i].length - 1);
+    }
 
     //build identities.
-    var id1, id2, id1and2;
+    var fn1, fn2, ln1, ln2;
 
-    if(idNumber === 1) {
-        id1and2 = getRandomID(famLines, lastNames, false, false, true);
-    } else {
-        id1and2 = getRandomID(famLines, lastNames, false, false, false);
-    }
+    //choose first name
+    var avaliableFams = famLines[randomize(0,famLines.length,true)].split(',');
+    fn1 = avaliableFams[randomize(0,avaliableFams.length - 1,true)];
 
-    id1 = id1and2.firstId;
-    id2 = id1and2.secondId;
-
-    return {
-        bFn: id1.first + " " + id1.mid,
-        bLn: id1.last,
-        sFn: id2.first + " " + id2.mid,
-        sLn: id2.last,
-        bNoC: id1.nameOnCard,
-        desc: id1.first + " " + id1.mid + " " + id1.last + " " + id1.nameOnCard + "  |  " + id2.first + " " + id2.mid + " " + id2.last + " |  " + idNumber,
-        idNumber: idNumber
-    }
-}
-
-function getRandomID(famLines,lastNames,useMiddleName,shortenMiddle, distinctIDs){
-    var fn1, fn2, mn1, mn2, ln1, ln2;
-    mn1 = " ";
-    mn2 = " ";
-    fn1 = " ";
-    fn2 = " ";
-    ln1 = " ";
-    ln2 = " ";
-
-    //choose first names
-    var random = randomize(0,famLines.length,true);
-    var famLine = famLines[random];
-    famLine = famLine.substr(0,famLine.length - 1);
-
-    var avaliableFams = famLine.split(',');
-    random = randomize(0,avaliableFams.length,true);
-    fn1 = avaliableFams[random];
-    fn2 = fn1;
-    //generate completely different name if required.
-    if(distinctIDs) {
-        //make sure that it is not the same name / nickname by accident
-        while(areAliases(fn1, fn2, famLines)) {
-            random = randomize(0, famLines.length, true);
-
-            famLine = famLines[random];
-            famLine = famLine.substr(0,famLine.length - 1);
-
-            avaliableFams = famLine.split(',');
-            random = randomize(0, avaliableFams.length, true);
-            fn2 = avaliableFams[random];
-        }
-    } else { //take an alias of fn1. Just take another name from the same line
-        fn2 = avaliableFams[(random + 1) % avaliableFams.length]
-    }
-
-    //choose middle names
-    if(useMiddleName) {
-        random = randomize(0,avaliableFams.length,true);
-        famLine = famLines[random];
-        famLine = famLine.substr(0,famLine.length - 1);
-        avaliableFams = famLine.split(',');
-
-        random = randomize(0,avaliableFams.length,true);
-        mn1 = avaliableFams[random];
-
-        //shorten the middle name if required
-        if(shortenMiddle) {
-            mn1 = mn1[0];
-        }
-
-        if(distinctIDs) { //choose distinct middle name
-            while (areAliases(fn1, fn2, famLines)) {
-                random = randomize(0, avaliableFams.length, true);
-                famLine = famLines[random];
-                famLine = famLine.substr(0,famLine.length - 1);
-                avaliableFams = famLine.split(',');
-
-                random = randomize(0, avaliableFams.length, true);
-                mn1 = avaliableFams[random];
-
-                //shorten the middle name if required
-                if (shortenMiddle) {
-                    mn1 = mn1[0];
-                }
-            }
-        } else { //choose an alias
-            mn2 = avaliableFams[(random + 1) % avaliableFams.length]
-        }
+    //generate distinct first name
+    if(idNumber === 2) {
+        do {
+            avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
+            fn2 = avaliableFams[randomize(0, avaliableFams.length, true)];
+        } while(/*typeof fn2 === 'undefined' ||*/ areAliases(fn1,fn2,famLines))
+    } else { //generate nickname
+        fn2 = avaliableFams[randomize(0,avaliableFams.length,true)];
     }
 
     //choose last name
-    random = randomize(1,lastNames.length,true);
-    ln1 = lastNames[random];
+    ln1 = lastNames[randomize(0,lastNames.length,true)];
 
-    if(distinctIDs) { //choose distinct last name
-        var random2 = random;
-        while(random === random2) {
-            var random2 = randomize(1,lastNames.length,true);
-            ln2 = lastNames[random2];
-        }
-    } else { //no aliases for last name, obviously
+    //generate distinct last name
+    if(idNumber === 2) {
+        do {
+            ln2 = lastNames[randomize(0,lastNames.length,true)];
+        } while(/*typeof ln2 === 'undefined' ||*/ ln1 === ln2)
+    } else { //use the same last name
         ln2 = ln1;
     }
 
     return {
-        firstId: {
-            first: fn1,
-            mid: mn1,
-            last: ln1,
-            nameOnCard: fn1 + " " + mn1 + " " + ln1
-        },
-        secondId: {
-            first: fn2,
-            mid: mn2,
-            last: ln2,
-            nameOnCard: fn2 + " " + mn2 + " " + ln2
-        }
+        bFn: fn1,
+        bLn: ln1,
+        sFn: fn2,
+        sLn: ln2,
+        bNoC: fn1 + " " + ln1,
+        desc: "-> " + fn1 + " " + ln1 + "\n -> " + fn2 + " " + ln2,
+        idNumber: idNumber
     }
 }
 
@@ -209,16 +129,4 @@ function randomize(inclusiveMin, exclusiveMax, round) {
         return Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin;
     //not normal distribution but close enough
     return (Math.round(Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin));
-}
-
-//letter randomizer
-function randomizeLetters(count)
-{
-    var text = "";
-    var allowed = "abcdefghijklmnopqrstuvwxyz";
-
-    for( var i=0; i < count; i++ )
-        text += allowed.charAt(Math.floor(allowed.length * Math.random()));
-
-    return text;
 }
