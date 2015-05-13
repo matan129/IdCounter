@@ -1,69 +1,168 @@
 var assert = require('assert');
 var validator = require('../validator.js');
 
-describe('Random name test', function() {
-    var input = generateRandomTest();
-    it('Name ' + input.desc, function () {
-        assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.Ids);
+describe('Random name tests', function() {
+    var input = generateRandomTest(1);
+    it('Random input with 1 identity \n ' + input.desc,  function () {
+        assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
+    });
+
+    input = generateRandomTest(2);
+    it('Random input with 2 two identities \n ' + input.desc,  function () {
+        assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
     });
 });
 
-function generateRandomTest(){
+function generateRandomTest(idNumber){
+    //read data
     var firstAndMiddleCSV = "names.csv";
     var lastNamesCSV = "test\\lastNames.csv";
 
-    //determine test configuration (one id, use middle name, ...)
-    var randomMiddle = Math.random();
-    var useMiddleName;
-    if(randomMiddle > 0.5)
-        useMiddleName = true;
-    else
-        useMiddleName = false;
-    //
-    var randShortMiddle = Math.random();
-    var shortenMiddle;
-    if(randShortMiddle > 0.5)
-        shortenMiddle = true;
-    else
-        shortenMiddle = false;
-    //
-    var randIdNumber = Math.random();
-    var IDs;
-    if(randShortMiddle > 0.5)
-        IDs = 2;
-    else
-        IDs = 1;
-    //
-
+    //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
-    //read names lines. fam stands for "first and middle" (names)
-    var famLines = fs.readFileSync(firstAndMiddleCSV).toString().split('\n');
-    var lastNames = fs.readFileSync(lastNamesCSV).toString().split('\n');
+    var fams = fs.readFileSync(firstAndMiddleCSV);
+    var lasts = fs.readFileSync(lastNamesCSV);
+
+    var famLines = fams.toString().split('\n');
+    var lastNames = lasts.toString().split('\r');
+
+    //determine test configuration (use middle name, short it, etc.)
+    var randomMiddle = Math.random();
+    var useMiddleName = randomMiddle > 0.5;
+
+    var randShortMiddle = Math.random();
+    var shortenMiddle = randShortMiddle > 0.5;
 
     //build identities.
-    var ID1 = getRandomID(famLines,lastNames,useMiddleName,shortenMiddle);
-    var ID2;
+    var id1, id2, id1and2;
 
-    if(IDs == 2) {
-        ID2 = getRandomID(famLines,lastNames,useMiddleName,shortenMiddle);
-    }
-    else { //create ID that is the same like the first one (but with variations like nicknames and such)
-        ID2 = getSimilarID(famLines,useMiddleName,shortenMiddle,ID1);
+    if(idNumber === 1) {
+        id1and2 = getRandomID(famLines, lastNames, useMiddleName, shortenMiddle, true);
+    } else {
+        id1and2 = getRandomID(famLines, lastNames, useMiddleName, shortenMiddle, false);
     }
 
-    var test = {
-        bFn: ID1.First + " " + ID1.MID,
-        bLn: ID1.Last,
-        sFn: ID2.First + " " + ID2.MID,
-        sLn: ID2.Last,
-        bNoC: ID1.First + " " + ID1.MID + " " + ID1.Last,
-        desc: ID1.First + " " + ID1.MID + " " + ID1.Last + "|" + ID2.First + " " + ID2.MID + " " + ID2.Last,
-        Ids: IDs
-    };
+    id1 = id1and2.firstId;
+    id2 = id1and2.secondId;
 
-    return test;
+    return {
+        bFn: id1.first + " " + id1.mid,
+        bLn: id1.last,
+        sFn: id2.first + " " + id2.mid,
+        sLn: id2.last,
+        bNoC: id1.nameOnCard,
+        desc: id1.first + " " + id1.mid + " " + id1.last + " " + id1.nameOnCard + "  |  " + id2.first + " " + id2.mid + " " + id2.last + " |  " + idNumber,
+        idNumber: idNumber
+    }
 }
 
+function getRandomID(famLines,lastNames,useMiddleName,shortenMiddle, distinctIDs){
+    var fn1, fn2, mn1, mn2, ln1, ln2;
+    mn1 = " ";
+    mn2 = " ";
+    fn1 = " ";
+    fn2 = " ";
+    ln1 = " ";
+    ln2 = " ";
+
+    //choose first names
+    var random = randomize(0,famLines.length,true);
+    var famLine = famLines[random];
+    famLine = famLine.substr(0,famLine.length - 1);
+
+    var avaliableFams = famLine.split(',');
+    random = randomize(0,avaliableFams.length,true);
+    fn1 = avaliableFams[random];
+    fn2 = fn1;
+    //generate completely different name if required.
+    if(distinctIDs) {
+        //make sure that it is not the same name / nickname by accident
+        while(areAliases(fn1, fn2, famLines)) {
+            random = randomize(0, famLines.length, true);
+
+            famLine = famLines[random];
+            famLine = famLine.substr(0,famLine.length - 1);
+
+            avaliableFams = famLine.split(',');
+            random = randomize(0, avaliableFams.length, true);
+            fn2 = avaliableFams[random];
+        }
+    } else { //take an alias of fn1. Just take another name from the same line
+        fn2 = avaliableFams[(random + 1) % avaliableFams.length]
+    }
+
+    //choose middle names
+    if(useMiddleName) {
+        random = randomize(0,avaliableFams.length,true);
+        famLine = famLines[random];
+        famLine = famLine.substr(0,famLine.length - 1);
+        avaliableFams = famLine.split(',');
+
+        random = randomize(0,avaliableFams.length,true);
+        mn1 = avaliableFams[random];
+
+        //shorten the middle name if required
+        if(shortenMiddle) {
+            mn1 = mn1[0];
+        }
+
+        if(distinctIDs) { //choose distinct middle name
+            while (areAliases(fn1, fn2, famLines)) {
+                random = randomize(0, avaliableFams.length, true);
+                famLine = famLines[random];
+                famLine = famLine.substr(0,famLine.length - 1);
+                avaliableFams = famLine.split(',');
+
+                random = randomize(0, avaliableFams.length, true);
+                mn1 = avaliableFams[random];
+
+                //shorten the middle name if required
+                if (shortenMiddle) {
+                    mn1 = mn1[0];
+                }
+            }
+        } else { //choose an alias
+            mn2 = avaliableFams[(random + 1) % avaliableFams.length]
+        }
+    }
+
+    //choose last name
+    random = randomize(1,lastNames.length,true);
+    ln1 = lastNames[random];
+
+    if(distinctIDs) { //choose distinct last name
+        var random2 = random;
+        while(random === random2) {
+            var random2 = randomize(1,lastNames.length,true);
+            ln2 = lastNames[random2];
+        }
+    } else { //no aliases for last name, obviously
+        ln2 = ln1;
+    }
+
+    return {
+        firstId: {
+            first: fn1,
+            mid: mn1,
+            last: ln1,
+            nameOnCard: fn1 + " " + mn1 + " " + ln1
+        },
+        secondId: {
+            first: fn2,
+            mid: mn2,
+            last: ln2,
+            nameOnCard: fn2 + " " + mn2 + " " + ln2
+        }
+    }
+}
+
+//determines if name is an alias of the other
+function areAliases(name1, name2, names) {
+    var name1nicks = getAllAliases(name1,names);
+    return name1nicks.indexOf(name2) > - 1
+}
+
+//generate all aliases of a name
 function getAllAliases(name, nameLines) {
     var allNicknames = [];
 
@@ -81,64 +180,7 @@ function getAllAliases(name, nameLines) {
     return allNicknames;
 }
 
-function getSimilarID(famLines, useMiddleName, shortenMiddle, ID1) {
-    var nicknames = getAllAliases(ID1.FN,famLines);
-    var famIndex = randomize(0,nicknames.length,true);
-    var firstName = nicknames[famIndex];
-
-    var middleName;
-    if(useMiddleName) {
-        if(shortenMiddle) { //first ID got it shorten, so this ID will "un-short" it
-            middleName = ID1.MID + randomLetters(5); //we don't really need meaningful name here, so just randomize
-        }
-        else { //short it
-            middleName = ID1.MID[0];
-        }
-    }
-
-    var ID = {
-        FN: firstName,
-        MID: middleName,
-        Last: ID1.Last
-    };
-
-    return ID;
-}
-
-function getRandomID(famLines,lastNames,useMiddleName,shortenMiddle){
-    //choose first name
-    var famIndex = randomize(0,famLines.length,true);
-    var famLine = famLines[famIndex];
-
-    var avaliableFams = famLine.split(',');
-    var famNameIndex = randomize(0,avaliableFams.length,true);
-    var Fn = avaliableFams[famNameIndex];
-
-    var mid = "";
-    if(useMiddleName) {
-        famNameIndex = randomize(0,avaliableFams.length,true);
-        mid = avaliableFams[famNameIndex];
-
-        //shorten the middle name if required
-        if(shortenMiddle) {
-            mid = mid[0];
-        }
-    }
-
-    //choose last name
-    var lastIndex = randomize(0,lastNames.length,true);
-    var lastName = lastNames[lastIndex];
-
-    var ID = {
-        FN: Fn,
-        MID: mid,
-        Last: lastName
-    };
-
-    return ID;
-}
-
-
+//pseudo random number generator
 function randomize(inclusiveMin, exclusiveMax, round) {
     if(!round)
         return Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin;
@@ -146,7 +188,8 @@ function randomize(inclusiveMin, exclusiveMax, round) {
     return (Math.round(Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin));
 }
 
-function randomLetters(count)
+//letter randomizer
+function randomizeLetters(count)
 {
     var text = "";
     var allowed = "abcdefghijklmnopqrstuvwxyz";

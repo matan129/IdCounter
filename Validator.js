@@ -9,17 +9,17 @@ exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,sh
 
     //setup billing ID
     var billingID = {
-        'First': "",
-        'Mid': "",
-        'Last': billLastName,
-        'NameOnCard' : billNameOnCard
+        "first": "",
+        "mid": "",
+        "last": billLastName,
+        "nameOnCard" : billNameOnCard
     };
 
     //setup shipping ID
     var shippingID = {
-        'First': "",
-        'Mid': "",
-        'Last': shipLastName
+        "first": "",
+        "mid": "",
+        "last": shipLastName
     };
 
     //setup names (get the scv file and split it)
@@ -27,37 +27,33 @@ exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,sh
 
     //Separate the (raw) first names, which may contain middle names
     var billingNames = separateFirstName(billFirstName, nameLines);
-    billingID.First = billingNames.FirstName;
-    billingID.Mid = billingNames.MiddleName;
+    billingID.first = billingNames.firstName;
+    billingID.mid = billingNames.middleName;
 
     var shippingNames = separateFirstName(shipFirstName, nameLines);
-    shippingID.First = shippingNames.FirstName;
-    shippingID.Mid = shippingNames.MiddleName;
+    shippingID.first = shippingNames.firstName;
+    shippingID.mid = shippingNames.middleName;
 
     //check id the two IDs are identical.
     if(verifyIdentities(shippingID,billingID, nameLines))
         return 1;
     return 2;
-}
+};
 
 function verifyIdentities(sID, bID, names) {
     //check first name (allow aliases / non strict)
-    if(!checkIdenticalNames(sID.First,bID.First, names, false, false)) {
+    if(!checkIdenticalNames(sID.first,bID.first, names, false, false)) {
         return false;
     }
 
     //check middle name. middle names act like first names, so allow aliases
-    if(!checkIdenticalNames(sID.Mid, bID.Mid, names, true, false)) {
+    if(!checkIdenticalNames(sID.mid, bID.mid, names, true, false)) {
         return false;
     }
 
     //check last names. Factor ONLY for typos (strict), and don't bother with aliases,
     // because last names do not have them.
-    if(!checkIdenticalNames(sID.Last, bID.Last, names, false, true)) {
-        return false;
-    }
-
-    return true;
+    return checkIdenticalNames(sID.last, bID.last, names, false, true);
 }
 
 
@@ -127,17 +123,17 @@ function getAllAliases(name, nameLines) {
 }
 
 
-//Splits a First+Middle name strings to separate strings.
+//Splits a first+Middle name strings to separate strings.
 function separateFirstName(firstNameRaw, names) {
-    var FN; //first name
-    var MN; //last name
+    var fn; //first name
+    var ln; //last name
 
     var words = firstNameRaw.split(' ');
 
     //only first name.
     if(words.length === 1) {
-        FN = words[0];
-        MN = "";
+        fn = words[0];
+        ln = "";
     }
 
     //middle name exists
@@ -145,22 +141,22 @@ function separateFirstName(firstNameRaw, names) {
         //check that the first name is an actual first name.
         //because our csv contains only first names we can leverage it for this test
         if (getAllAliases(words[0],names) !== "") {
-            FN = words[0];
-            MN = words[1];
+            fn = words[0];
+            ln = words[1];
         }
         else { //reverse order
-            FN = words[1];
-            MN = words[0];
+            fn = words[1];
+            ln = words[0];
         }
     }
 
     return {
-        'FirstName' : FN,
-        'MiddleName' : MN
+        'firstName' : fn,
+        'middleName' : ln
     }
 }
 
-//get stuff from the csv
+//get names from the csv
 function getNameLines() {
     var fs = require('fs');
 
