@@ -47,7 +47,7 @@ describe('100 Random name tests', function() {
 function generateRandomTest(idNumber){
     //read data
     var firstAndMiddleCSV = "names.csv";
-    var lastNamesCSV = "test\\lastNames.csv";
+    var lastNamesCSV = "test/lastNames.csv";
 
     //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
@@ -71,7 +71,7 @@ function generateRandomTest(idNumber){
         do {
             avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
             fn2 = avaliableFams[randomize(0, avaliableFams.length, true)];
-        } while(/*typeof fn2 === 'undefined' ||*/ areAliases(fn1,fn2,famLines))
+        } while(areAliases(fn1,fn2,famLines))
     } else { //generate nickname
         fn2 = avaliableFams[randomize(0,avaliableFams.length,true)];
     }
@@ -83,7 +83,7 @@ function generateRandomTest(idNumber){
     if(idNumber === 2) {
         do {
             ln2 = lastNames[randomize(0,lastNames.length,true)];
-        } while(/*typeof ln2 === 'undefined' ||*/ ln1 === ln2)
+        } while(ln1 === ln2)
     } else { //use the same last name
         ln2 = ln1;
     }
