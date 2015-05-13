@@ -5,15 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2be3b8a-8231-4a72-b693-1ba216d2a65d" name="Default" comment="">
-      <change type="DELETED" beforePath="C:\Users\Matan\IdeaProjects\IDCounter\npm-debug.log" afterPath="" />
-      <change type="MOVED" beforePath="C:\Users\Matan\IdeaProjects\IDCounter\Validator.js" afterPath="$PROJECT_DIR$/validator.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node_modules/request/node_modules/form-data/node_modules/async/lib/async.js" afterPath="$PROJECT_DIR$/node_modules/request/node_modules/form-data/node_modules/async/lib/async.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node_modules/request/node_modules/http-signature/node_modules/ctype/ctio.js" afterPath="$PROJECT_DIR$/node_modules/request/node_modules/http-signature/node_modules/ctype/ctio.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node_modules/request/node_modules/hawk/node_modules/boom/lib/index.js" afterPath="$PROJECT_DIR$/node_modules/request/node_modules/hawk/node_modules/boom/lib/index.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node_modules/request/node_modules/hawk/node_modules/boom/test/index.js" afterPath="$PROJECT_DIR$/node_modules/request/node_modules/hawk/node_modules/boom/test/index.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node_modules/request/node_modules/oauth-sign/index.js" afterPath="$PROJECT_DIR$/node_modules/request/node_modules/oauth-sign/index.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/tester.js" afterPath="$PROJECT_DIR$/test/tester.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="IDCounter.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -59,8 +51,8 @@
       <file leaf-file-name="tester.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/tester.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="4.098672">
-              <caret line="80" column="57" selection-start-line="80" selection-start-column="57" selection-end-line="80" selection-end-column="57" />
+            <state vertical-scroll-proportion="0.8058036">
+              <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
               <folding />
             </state>
           </provider>
@@ -725,12 +717,12 @@
       <option name="number" value="Default" />
       <updated>1431368121434</updated>
       <workItem from="1431368123991" duration="4585000" />
-      <workItem from="1431438610787" duration="29584000" />
+      <workItem from="1431438610787" duration="30904000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="34169000" />
+    <option name="totallyTimeSpent" value="35489000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -754,7 +746,7 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.39935064" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39935064" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -834,8 +826,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/tester.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="4.098672">
-          <caret line="80" column="57" selection-start-line="80" selection-start-column="57" selection-end-line="80" selection-end-column="57" />
+        <state vertical-scroll-proportion="0.8058036">
+          <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
           <folding />
         </state>
       </provider>

@@ -1,7 +1,30 @@
 var assert = require('assert');
-var validator = require('../validator.js');
+var validator = require('../Validator.js');
 
-describe('Random name tests', function() {
+describe('\"Deborah\" name tests', function() {
+    it('Deborah Egli & Deborah Egli',  function () {
+        assert.equal(validator.countUniqueNames("Deborah","Egli","Deborah","Egli","Deborah Egli"),1);
+    });
+
+    it('Deborah Egli & Debbie Egli',  function () {
+        assert.equal(validator.countUniqueNames("Deborah","Egli","Debbie","Egli","Debbie Egli"),1);
+    });
+
+    it('Deborah Egni & Debbie Egli (Typo)',  function () {
+        assert.equal(validator.countUniqueNames("Deborah","Egni","Deborah","Egli","Deborah Egli") ,1);
+    });
+
+    it('Deborah S Egli & Debbie Egli (Shorted middle name)',  function () {
+        assert.equal(validator.countUniqueNames("Deborah S","Egli","Deborah","Egli","Egli Deborah") ,1);
+    });
+
+    it('Michele Egli & Debbie Egli (two ids)',  function () {
+        assert.equal(validator.countUniqueNames("Michele","Egli","Deborah","Egli","Michele Egli") ,2);
+    });
+});
+
+
+/*describe('Random name tests', function() {
     var input = generateRandomTest(1);
     it('Random input with 1 identity \n ' + input.desc,  function () {
         assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
@@ -11,7 +34,7 @@ describe('Random name tests', function() {
     it('Random input with 2 two identities \n ' + input.desc,  function () {
         assert.equal(validator.countUniqueNames(input.bFn,input.bLn,input.sFn, input.sLn, input.bNoC),input.idNumber);
     });
-});
+});*/
 
 function generateRandomTest(idNumber){
     //read data
@@ -37,9 +60,9 @@ function generateRandomTest(idNumber){
     var id1, id2, id1and2;
 
     if(idNumber === 1) {
-        id1and2 = getRandomID(famLines, lastNames, useMiddleName, shortenMiddle, true);
+        id1and2 = getRandomID(famLines, lastNames, false, false, true);
     } else {
-        id1and2 = getRandomID(famLines, lastNames, useMiddleName, shortenMiddle, false);
+        id1and2 = getRandomID(famLines, lastNames, false, false, false);
     }
 
     id1 = id1and2.firstId;
