@@ -79,7 +79,7 @@ function checkIdenticalNames(name1, name2, names, isMiddle, isStrict) {
             if (!(name1.length === 0) ^ !(name2.length === 0))
                 return true;
 
-            //check if one name is a short name for the nother (i.e. "J." for Genuine in Michael J. Fox. Wait, what?
+            //check if one name is a short name for the another (i.e. "J." for Genuine in Michael J. Fox. Wait, what?
             if (!checkMiddleShorting(name1, name2) ^ !checkMiddleShorting(name2, name1)) {
                 return true;
             }
@@ -110,13 +110,17 @@ function checkMiddleShorting(name1, name2) {
 
 //get all aliases of a name
 function getAllAliases(name, nameLines) {
-    var allNicknames = "";
+    var allNicknames = [];
 
     //go over the lines we got from the csv
     for(var i = 0; i < nameLines.length; i++) {
-        if (nameLines[i].indexOf(name) > -1)
+        if (nameLines[i].indexOf(name) > -1) {
             //append them to the allNicknames variable if they match
-            allNicknames = allNicknames + nameLines[i];
+            var nicks = nameLines[i].split(',');
+            for(var k = 0; k < nicks.length; k++) {
+                allNicknames[allNicknames.length] = nicks[k];
+            }
+        }
     }
 
     return allNicknames;
