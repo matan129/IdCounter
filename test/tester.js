@@ -115,7 +115,7 @@ function getAllAliases(name, nameLines) {
             //append them to the allNicknames variable if they match
             var nicks = nameLines[i].split(',');
             for(var k = 0; k < nicks.length; k++) {
-                allNicknames[allNicknames.length] = nicks[k];
+                allNicknames.push(nicks[k]);
             }
         }
     }
