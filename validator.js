@@ -11,21 +11,31 @@ exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,sh
     var nocID = IdCounter.parseIdentity(billNameOnCard);
 
     //count the parse identities
-    return IdCounter.verifyIdentities(shippingID,billingID, nocID);
+    return IdCounter.countIdentities([shippingID,billingID, nocID]);
 };
 
 var IdCounter = {
-    verifyIdentities: function (sID, bID, nocID) {
+    countIdentities: function (IDs) {
+        var count = 0;
+        for(var i = 0; i < IDs.length; i++) {
+            count += IdCounter.areIdenticalIDs(IDs[i],IDs[(i+1)%IDs.length]);
+        }
+        return Math.max(count,1);
+    },
+
+    areIdenticalIDs: function (id1, id2) {
         //check first name (allow aliases / non strict)
-        var fnResult = IdCounter.countDistinctNames([sID.first, bID.first, nocID.first], false, false);
+        var fnResult = IdCounter.countDistinctNames([id1.first, id2.first], false, false);
 
         //check middle name. middle names act like first names, so allow aliases
-        var midResult = IdCounter.countDistinctNames([sID.middle, bID.middle, nocID.middle], true, false);
+        var midResult = IdCounter.countDistinctNames([id1.middle, id2.middle], true, false);
 
         //check last names. Factor ONLY for typos (strict), and don't bother with aliases, because last names do not have them.
-        var lastResult = IdCounter.countDistinctNames([sID.last, bID.last, nocID.last], false, true);
+        var lastResult = IdCounter.countDistinctNames([id1.last, id2.last], false, true);
 
-        return Math.max(fnResult,Math.max(midResult,lastResult));
+        if (Math.max(fnResult,midResult,lastResult) > 1)
+            return 1;
+        return 0;
     },
 
     countDistinctNames: function (names, isMiddle, isStrict) {
@@ -44,13 +54,6 @@ var IdCounter = {
 
         //if not in strict mode, check for aliases
         if (!isStrict) {
-            //get all the aliases of this name
-            var aliases = IdCounter.getAllAliases(name1);
-
-            //if the name is an alias of the other, return true
-            if (aliases.indexOf(name2) > -1)
-                return 0;
-
             //special check for middle names
             if (isMiddle) {
                 //allow only one middle name to be non-existent, so we use XOR workaround.
@@ -63,6 +66,15 @@ var IdCounter = {
                     return 0;
                 }
             }
+
+            //get all the aliases of this name
+            var aliases = IdCounter.getAllAliases(name1);
+
+            //if the name is an alias of the other, return true
+            if (aliases.indexOf(name2) > -1)
+                return 0;
+
+
         }
 
         //factor in for typos (allow up to one mistake - one character or one character swap)
@@ -97,7 +109,7 @@ var IdCounter = {
                 return false;
 
             for(var index = 0; index < s1.length; index++) {
-                if(s1[index] !== s2[s2.length - index])
+                if(s1[index] !== s2[s2.length - 1 - index])
                     return false;
             }
 
@@ -125,7 +137,7 @@ var IdCounter = {
                 //middle name exists
                 //check that the first name is an actual first name.
                 //because our csv contains only first names we can leverage it for this test
-                if (IdCounter.getAllAliases(fnWords[0]).length > 0) {
+                if (IdCounter.isFirstName(fnWords[0])) {
                     identity.first = fnWords[0];
                     identity.middle = fnWords[1];
                 }
@@ -144,21 +156,70 @@ var IdCounter = {
              - Deborah Morgan
              - Morgan Deborah
              */
+
+            //split to middle+first and last names
             var split = (function() {
-                var found = [];
+                var attr = [];
+                var firstsAndMids = [];
                 var lastName;
+
+                //catalog names
                 for(var i = 0; i < fnWords.length; i++) {
-                    var name = fnWords[i];
-                    if(IdCounter.getAllAliases(name).length > 0) {
-                        //meaning it's either first or middle name
-                        found.push(name);
+                    attr.push({
+                        canBeFirstOrMiddle: false,
+                        isMiddle: false,
+                        canBeLast: false,
+                        blackListed: false
+                    });
+
+                    if(IdCounter.isFirstName(fnWords[i]))
+                        attr[i].canBeFirstOrMiddle = true;
+                    if(fnWords[i].length == 1) {
+                        attr[i].canBeFirstOrMiddle = false;
+                        attr[i].isMiddle = true;
                     } else {
-                        lastName = name;
+                        if (IdCounter.isLastName(fnWords[i]))
+                            attr[i].canBeLast = true;
+                    }
+                }
+
+                //choose first name if there 100% middle name after it
+                for(i = 0; i < attr.length; i++) {
+                    if(attr[i].isMiddle) {
+                        firstsAndMids.push(fnWords[i-1]);
+                        attr[i-1].blackListed = true;
+                    }
+                }
+
+                //choose last name
+                for(i = 0; i < attr.length; i++) {
+                    if(!attr[i].blackListed && attr[i].canBeLast == true && attr[i].canBeFirstOrMiddle == false && (i == 0 || i == attr.length - 1)) {
+                        lastName = fnWords[i];
+                        attr[i].blackListed = true;
+                        break;
+                    }
+                }
+
+                if(typeof lastName == 'undefined') {
+                    //no last name was chosen, so go back to worse case
+                    for(i = 0; i < attr.length; i++) {
+                        if(!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
+                            lastName = fnWords[i];
+                            attr[i].blackListed = true;
+                            break;
+                        }
+                    }
+                }
+
+                //all the other names are first or middle be definition
+                for(i = 0; i < attr.length; i++) {
+                    if(!attr[i].blackListed) {
+                        firstsAndMids.push(fnWords[i]);
                     }
                 }
 
                 return {
-                    firstAndMiddle: found,
+                    firstAndMiddle: firstsAndMids,
                     last: lastName
                 };
             }());
@@ -188,10 +249,10 @@ var IdCounter = {
         var allNicknames = [];
 
         //go over the lines we got from the csv
-        for (var i = 0; i < IdCounter.names.length; i++) {
-            if (IdCounter.names[i].indexOf(name) > -1) {
+        for (var i = 0; i < IdCounter.aliases.length; i++) {
+            if (IdCounter.aliases[i].indexOf(name) > -1) {
                 //append them to the allNicknames variable if they match
-                var nicks = IdCounter.names[i].split(',');
+                var nicks = IdCounter.aliases[i].split(',');
                 for (var k = 0; k < nicks.length; k++) {
                     allNicknames.push(nicks[k]);
                 }
@@ -201,12 +262,67 @@ var IdCounter = {
         return allNicknames;
     },
 
-    //get names from the csv
-    names: (function () {
+    isFirstName: function(name) {
+        if(name.length < 2)
+            return false;
+
+        for(var i = 0; i < IdCounter.lastNames.length; i++)
+            if(IdCounter.getAllAliases(name).length > 0)
+                return true;
+
+        for(var i = 0; i < IdCounter.firstNames.length; i++)
+            if(IdCounter.firstNames[i] === name)
+                return true;
+
+        return false;
+    },
+
+    isLastName: function(name) {
+        //return IdCounter.lastNames.indexOf(name) > -1;
+        for(var i = 0; i < IdCounter.lastNames.length; i++) {
+            //since the list is alphabetical skip irrelevant records
+            if(name < IdCounter.lastNames[i])
+                return false;
+
+            if(name === IdCounter.lastNames[i])
+                return true;
+        }
+
+        return false;
+    },
+
+    //get first names aliases from the csv
+    aliases: (function () {
         var fs = require('fs');
 
         //read and split to lines
-        var csv = fs.readFileSync('names.csv');
+        var csv = fs.readFileSync('aliases.csv');
         return csv.toString().split('\n');
+    } ()),
+
+    firstNames: (function () {
+        var fs = require('fs');
+
+        //read and split to lines
+        var csv = fs.readFileSync('first_names.csv');
+        var names =  csv.toString().split('\r');
+        for(var i =0; i < names.length; i++) {
+            names[i] = names[i].toLowerCase();
+            names[i] = names[i].replace('\n','');
+        }
+        return names;
+    } ()),
+
+    //get last names from the csv
+    lastNames: (function () {
+        var fs = require('fs');
+
+        //read and split to lines
+        var csv = fs.readFileSync('last_names.csv');
+        var names =  csv.toString().split('\r');
+        for(var i =0; i < names.length; i++) {
+            names[i] = names[i].toLowerCase();
+        }
+        return names;
     } ())
 };

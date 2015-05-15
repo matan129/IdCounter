@@ -3,40 +3,48 @@ var validator = require('../validator.js');
 
 //"manual" tests
 describe('\"Deborah\" name tests', function() {
-    it('Deborah Egli & Deborah Egli',  function () {
+    this.timeout(100000);
+    it('Deborah Egli & Deborah Egli',  function (done) {
         assert.equal(validator.countUniqueNames("Deborah","Egli","Deborah","Egli","Deborah Egli"),1);
+        done();
     });
 
-    it('Deborah Egli & Debbie Egli',  function () {
+    it('Deborah Egli & Debbie Egli',  function (done) {
         assert.equal(validator.countUniqueNames("Deborah","Egli","Debbie","Egli","Debbie Egli"),1);
+        done();
     });
 
-    it('Deborah Egni & Debbie Egli (Typo)',  function () {
+    it('Deborah Egni & Debbie Egli (Typo)',  function (done) {
         assert.equal(validator.countUniqueNames("Deborah","Egni","Deborah","Egli","Deborah Egli") ,1);
+        done();
     });
 
-    it('Deborah S Egli & Debbie Egli (Shorted middle name)',  function () {
+    it('Deborah S Egli & Debbie Egli (Shorted middle name)',  function (done) {
         assert.equal(validator.countUniqueNames("Deborah S","Egli","Deborah","Egli","Egli Deborah") ,1);
+        done();
     });
 
-    it('Michele Egli & Debbie Egli (two ids)',  function () {
+    it('Michele Egli & Debbie Egli (two ids)',  function (done) {
         assert.equal(validator.countUniqueNames("Michele","Egli","Deborah","Egli","Michele Egli") ,2);
+        done();
     });
 });
 
 
 //random names tests
-describe('100 Random name tests', function() {
+describe('10 Random name tests', function() {
+    this.timeout(100000);
+
     var input;
 
-    for(var i = 0; i < 50; i++) {
+    for(var i = 0; i < 5; i++) {
         input = generateRandomTest(1);
         it('Random input with 1 identity \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
-    for(var i = 0; i < 50; i++) {
+    for(var i = 0; i < 5; i++) {
         input = generateRandomTest(2);
         it('Random input with 2 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
@@ -46,8 +54,8 @@ describe('100 Random name tests', function() {
 
 function generateRandomTest(idNumber){
     //read data
-    var firstAndMiddleCSV = "names.csv";
-    var lastNamesCSV = "test/lastNames.csv";
+    var firstAndMiddleCSV = "aliases.csv";
+    var lastNamesCSV = "last_names.csv";
 
     //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
