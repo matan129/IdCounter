@@ -128,6 +128,67 @@ function generateRandomTest(idNumber, data) {
         ln3 = ln2;
     }
 
+    /*
+    if(typeof fn1 === 'undefined' || typeof fn2 === 'undefined' || typeof fn3 === 'undefined' ||
+        typeof ln1 === 'undefined' || typeof ln2 === 'undefined' || typeof ln3 === 'undefined' ||
+        fn1 === 'undefined' || fn2 === 'undefined' || fn3 === 'undefined' ||
+        ln1 === 'undefined' || ln2 === 'undefined' || ln3 === 'undefined') {
+        console.log("something fishy is going on!");
+    }
+    */
+
+    
+    if(Math.random() > 0.75) {
+        //give some chance for letter swaps
+        var rand = randomize(1,7,true);
+        if(Math.random() > 0.5) {
+            //do typo
+            switch(rand) {
+                case 1:
+                    fn1  = doTypo(fn1);
+                    break;
+                case 2:
+                    fn2  = doTypo(fn2);
+                    break;
+                case 3:
+                    fn3  = doTypo(fn3);
+                    break;
+                case 4:
+                    ln1  = doTypo(ln1);
+                    break;
+                case 5:
+                    ln2  = doTypo(ln2);
+                    break;
+                case 6:
+                    ln3  = doTypo(ln3);
+                    break;
+            }
+        } else {
+            //swap letter
+            switch(rand) {
+                case 1:
+                    fn1  = doLetterSwap(fn1);
+                    break;
+                case 2:
+                    fn2  = doLetterSwap(fn2);
+                    break;
+                case 3:
+                    fn3  = doLetterSwap(fn3);
+                    break;
+                case 4:
+                    ln1  = doLetterSwap(ln1);
+                    break;
+                case 5:
+                    ln2  = doLetterSwap(ln2);
+                    break;
+                case 6:
+                    ln3  = doLetterSwap(ln3);
+                    break;
+            }
+        }
+    }
+    
+    
     return {
         bFn: fn1,
         bLn: ln1,
@@ -137,6 +198,29 @@ function generateRandomTest(idNumber, data) {
         desc: "-> " + fn1 + " " + ln1 + "\n -> " + fn2 + " " + ln2 + "\n -> " + fn3 + " " + ln3,
         idNumber: idNumber
     }
+}
+
+
+function doTypo(name) {
+    var index = randomize(0,name.length,true);
+
+    //97 - 122 (including both ends) is the ASCII range for english non-capital letters
+    return setCharAt(name,index,String.fromCharCode(randomize(97,123,true)));
+}
+
+function doLetterSwap(name) {
+    var index = randomize(0,name.length - 1,true);
+
+    var temp  = name[index + 1];
+    name = setCharAt(name,index + 1,name[index]);
+
+    return setCharAt(name,index,temp);
+}
+
+//since js strings are immutable, re-build string in order to replace char at certain position
+function setCharAt(str,index,chr) {
+    if(index > str.length-1) return str;
+    return str.substr(0,index) + chr + str.substr(index+1);
 }
 
 //determines if name is an alias of the other
@@ -168,5 +252,5 @@ function randomize(inclusiveMin, exclusiveMax, round) {
     if (!round)
         return Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin;
     //not normal distribution but close enough
-    return (Math.round(Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin));
+    return Math.min(exclusiveMax - 1,(Math.round((Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin))));
 }
