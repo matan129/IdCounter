@@ -51,7 +51,10 @@ var IdCounter = {
     },
 
     areDifferentIDs: function (id1, id2) {
-        if (!id1.isNoC && !id2.isNoC) {
+        if (!id1.isNoC && !id2.isNoC || !id1.skip || id2.skip) {
+            id1.skip = false;
+            id2.skip = false;
+
             //check first name (allow aliases / non strict)
             var fnResult = IdCounter.countDistinctNames(id1.first, id2.first, false, false);
 
@@ -62,20 +65,20 @@ var IdCounter = {
             var lastResult = IdCounter.countDistinctNames(id1.last, id2.last, false, true);
 
             return Math.max(fnResult, midResult, lastResult) > 1;
+
         } else {
-            /*
-              since name on card parsing may get it wrong due to ambiguous names,
-              we may need to re-interpret them with contextual info from another identity
-            */
+             //since name on card parsing may get it wrong due to ambiguous names,
+             //we may need to re-interpret them with contextual info from another identity
 
             if (id2.isNoC) {
-                id1 = IdCounter.contextualReInterpretNoC(id2, id1);
-            } else {
+                id2 = IdCounter.contextualReInterpretNoC(id2, id1);
+            } else if (id1.isNoC) {
                 id1 = IdCounter.contextualReInterpretNoC(id1, id2);
             }
 
             return IdCounter.areDifferentIDs(id1, id2);
         }
+
     },
 
     //re-parses identity generated from the Name On Card field with contextual information
@@ -94,7 +97,9 @@ var IdCounter = {
 
         // Goes over all permutations (three fields: 3! = 6).
         if (matchIDs(id2, nocId.first, nocId.middle, nocId.last)) {
-           return nocId;
+            //since we haven't change anything let it be re-parsed later
+            nocId.isNoC = true;
+            nocId.skip = true;
         } else if (matchIDs(id2, nocId.middle, nocId.first, nocId.last)) {
             nocId.first = oldID.middle;
             nocId.middle = oldID.first;
@@ -120,13 +125,14 @@ var IdCounter = {
         return nocId;
 
         function matchIDs(id1, fn, mn, ln) {
-            return matchedNames(id1.first, fn) && matchedNames(id1.middle, mn) && matchedNames(id1.last, ln);
+            return fn.length !== 0 && ln.length !== 0
+                && matchedNames(id1.first, fn) && matchedNames(id1.middle, mn) && matchedNames(id1.last, ln);
 
             function matchedNames(name1, name2) {
                 if (name1 === name2)
                     return true;
 
-                if(!(name1.length === 0) ^ !(name2.length === 0))
+                if (!(name1.length === 0) ^ !(name2.length === 0))
                     return true;
 
                 if (name1.length === 1 && name2[0] === name1)
@@ -221,6 +227,7 @@ var IdCounter = {
             middle: "",
             last: lastName || "",
             isNoC: false,
+            skip: false
         };
 
         //remove punctuation and split the first name to its components
