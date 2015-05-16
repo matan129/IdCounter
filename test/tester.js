@@ -3,8 +3,6 @@ var validator = require('../validator.js');
 
 //"manual" tests
 describe('\"Deborah\" name tests', function () {
-    this.timeout(30000); //TODO improve name lookup.
-
     it('Deborah Egli & Debbie Egli', function () {
         assert.equal(validator.countUniqueNames('Deborah', 'Egli', 'Debbie', 'Egli', 'Debbie Egli'), 1);
     });
@@ -28,27 +26,25 @@ describe('\"Deborah\" name tests', function () {
 
 
 //random names tests
-describe('15 Random name tests', function () {
-    this.timeout(30000); //TODO improve name lookup.
-
+describe('1,500 Random name tests', function () {
     var input;
     var data = prepareData();
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 500; i++) {
         input = generateRandomTest(1, data);
         it('Random input with 1 identity \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 500; i++) {
         input = generateRandomTest(2, data);
         it('Random input with 2 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 500; i++) {
         input = generateRandomTest(3, data);
         it('Random input with 3 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
@@ -82,7 +78,7 @@ function generateRandomTest(idNumber, data) {
     var lastNames = data.last;
 
     //build identities.
-    var fn1, fn2, fn3, ln1, ln2, ln3;
+    var fn1, fn2, fn3, ln1, ln2, ln3, mid1 = "", mid2 = "", mid3 = "";
 
     //choose first name
     var avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
@@ -128,108 +124,107 @@ function generateRandomTest(idNumber, data) {
         ln3 = ln2;
     }
 
-/*
-   if(Math.random > 0.5) {
-       //give some chance for middle names to pop in
-       avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
-       var middle = avaliableFams[randomize(0, avaliableFams.length - 1, true)];
 
-       fn2 += " " + middle;
-       fn3 += " " + middle.charAt(0) + ".";
-   }
+    if (Math.random() > 0.5) {
+        //give some chance for middle names to pop in
+        avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
+        mid1 = avaliableFams[randomize(0, avaliableFams.length, true)];
 
-    
-    if(Math.random() > 0.75) {
-        //give some chance for letter swaps
-        var rand = randomize(1,7,true);
         if(Math.random() > 0.5) {
-            //do typo
-            switch(rand) {
-                case 1:
-                    fn1  = doTypo(fn1);
-                    break;
-                case 2:
-                    fn2  = doTypo(fn2);
-                    break;
-                case 3:
-                    fn3  = doTypo(fn3);
-                    break;
-                case 4:
-                    ln1  = doTypo(ln1);
-                    break;
-                case 5:
-                    ln2  = doTypo(ln2);
-                    break;
-                case 6:
-                    ln3  = doTypo(ln3);
-                    break;
+            if(Math.random() > 0.5) {
+                //use identical name
+                mid2 = mid1;
+            } else {
+                //use initial
+                mid2 = mid1[0];
             }
         } else {
-            //swap letter
-            switch(rand) {
-                case 1:
-                    fn1  = doLetterSwap(fn1);
-                    break;
-                case 2:
-                    fn2  = doLetterSwap(fn2);
-                    break;
-                case 3:
-                    fn3  = doLetterSwap(fn3);
-                    break;
-                case 4:
-                    ln1  = doLetterSwap(ln1);
-                    break;
-                case 5:
-                    ln2  = doLetterSwap(ln2);
-                    break;
-                case 6:
-                    ln3  = doLetterSwap(ln3);
-                    break;
+            if(Math.random() > 0.5) {
+                //use identical name
+                mid3 = mid1;
+            } else {
+                //use initial
+                mid3 = mid1[0];
             }
         }
     }
-*/
-    
-    return {
-        bFn: fn1,
+
+    var input = {
+        bFn: fn1 + " " + mid1,
         bLn: ln1,
-        sFn: fn2,
+        sFn: fn2  + " " + mid2,
         sLn: ln2,
-        bNoC: fn3 + " " + ln3,
-        desc: "-> " + fn1 + " " + ln1 + "\n -> " + fn2 + " " + ln2 + "\n -> " + fn3 + " " + ln3,
+        bNoC: fn3  + " " + mid3 + " " + ln3,
+        desc: "-> " + fn1 + " " + mid1 + " " + ln1 + "\n -> " + fn2 + " " + mid2+ " " + ln2 + "\n -> " + fn3 + " " + mid3 + " " + ln3,
         idNumber: idNumber
+    };
+
+    return mutateTest(input);
+}
+
+//does some modifications to the data, like generation typos
+function mutateTest(input) {
+    if (Math.random() > 0.5) {
+        switch (randomize(1, 6, true)) {
+            case 1:
+                input.bFn = mutateString(input.bFn);
+                break;
+            case 2:
+                input.bLn = mutateString(input.bLn);
+                break;
+            case 3:
+                input.sFn = mutateString(input.sFn);
+                break;
+            case 4:
+                input.sLn = mutateString(input.sLn);
+                break;
+            case 5:
+                input.bNoc = mutateString(input.bNoC);
+                break;
+        }
+    }
+
+    return input;
+}
+
+function mutateString(str) {
+    if (Math.random() > 0.5) {
+        //do typo
+        return doTypo(str);
+    } else {
+        //swap letter
+        return doLetterSwap(str);
     }
 }
 
-
-function doTypo(name) {
+function doTypo(str) {
     var index;
 
     do {
-        index = randomize(0,name.length,true);
-    } while(name[index] !== ' ');
+        index = randomize(0, str.length, true);
+    } while (str[index] === ' ');
 
     //97 - 122 (including both ends) is the ASCII range for english non-capital letters
-    return setCharAt(name,index,String.fromCharCode(randomize(97,123,true)));
+    return setCharAt(str, index, String.fromCharCode(randomize(97, 123, true)));
 }
 
-function doLetterSwap(name) {
+function doLetterSwap(str) {
     var index;
 
     do {
-        index = randomize(0,name.length,true);
-    } while(name[index] !== ' ' && name[index + 1] !== ' ');
+        index = randomize(0, str.length - 1, true);
+    } while (str[index] === ' ' || str[index + 1] === ' ');
 
-    var temp  = name[index + 1];
-    name = setCharAt(name,index + 1,name[index]);
+    var temp = str[index + 1];
+    str = setCharAt(str, index + 1, str[index]);
 
-    return setCharAt(name,index,temp);
+    return setCharAt(str, index, temp);
 }
 
 //since js strings are immutable, re-build string in order to replace char at certain position
-function setCharAt(str,index,chr) {
-    if(index > str.length-1) return str;
-    return str.substr(0,index) + chr + str.substr(index+1);
+function setCharAt(str, index, chr) {
+    if (index > str.length - 1) return str;
+    return str.substr(0, index) + chr + str.substr(index + 1);
 }
 
 //determines if name is an alias of the other
@@ -261,5 +256,5 @@ function randomize(inclusiveMin, exclusiveMax, round) {
     if (!round)
         return Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin;
     //not normal distribution but close enough
-    return Math.min(exclusiveMax - 1,(Math.round((Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin))));
+    return Math.min(exclusiveMax - 1, (Math.round((Math.random() * (exclusiveMax - inclusiveMin) + inclusiveMin))));
 }
