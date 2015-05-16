@@ -5,27 +5,27 @@ var validator = require('../validator.js');
 describe('\"Deborah\" name tests', function() {
     this.timeout(100000);
     it('Deborah Egli & Deborah Egli',  function (done) {
-        assert.equal(validator.countUniqueNames("Deborah","Egli","Deborah","Egli","Deborah Egli"),1);
+        assert.equal(validator.countUniqueNames('Deborah','Egli','Deborah','Egli','Deborah Egli'),1);
         done();
     });
 
     it('Deborah Egli & Debbie Egli',  function (done) {
-        assert.equal(validator.countUniqueNames("Deborah","Egli","Debbie","Egli","Debbie Egli"),1);
+        assert.equal(validator.countUniqueNames('Deborah','Egli','Debbie','Egli','Debbie Egli'),1);
         done();
     });
 
     it('Deborah Egni & Debbie Egli (Typo)',  function (done) {
-        assert.equal(validator.countUniqueNames("Deborah","Egni","Deborah","Egli","Deborah Egli") ,1);
+        assert.equal(validator.countUniqueNames('Deborah','Egni','Deborah','Egli','Deborah Egli') ,1);
         done();
     });
 
     it('Deborah S Egli & Debbie Egli (Shorted middle name)',  function (done) {
-        assert.equal(validator.countUniqueNames("Deborah S","Egli","Deborah","Egli","Egli Deborah") ,1);
+        assert.equal(validator.countUniqueNames('Deborah S','Egli','Deborah','Egli','Egli Deborah') ,1);
         done();
     });
 
     it('Michele Egli & Debbie Egli (two ids)',  function (done) {
-        assert.equal(validator.countUniqueNames("Michele","Egli","Deborah","Egli","Michele Egli") ,2);
+        assert.equal(validator.countUniqueNames('Michele','Egli','Deborah','Egli','Michele Egli') ,2);
         done();
     });
 });
@@ -61,8 +61,8 @@ describe('15 Random name tests', function() {
 
 function generateRandomTest(idNumber){
     //read data
-    var aliasesCSV = "aliases.csv";
-    var lastNamesCSV = "last_names.csv";
+    var aliasesCSV = 'aliases.csv';
+    var lastNamesCSV = 'last_names.csv';
 
     //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
