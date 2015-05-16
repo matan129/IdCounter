@@ -1,7 +1,7 @@
 //counts the # of ID involved
-exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,shipLastName,billNameOnCard) {
+exports.countUniqueNames = function (billFirstName, billLastName, shipFirstName, shipLastName, billNameOnCard) {
     //make everything lower case everything (so string comparison will be less complex)
-    for(var i = 0; i < arguments.length; i++) {
+    for (var i = 0; i < arguments.length; i++) {
         arguments[i] = arguments[i].toLowerCase();
     }
 
@@ -11,7 +11,7 @@ exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,sh
     var nocID = IdCounter.parseIdentity(billNameOnCard);
 
     //count the parse identities
-    return IdCounter.countIdentities([shippingID,billingID, nocID]);
+    return IdCounter.countIdentities([shippingID, billingID, nocID]);
 };
 
 var IdCounter = {
@@ -19,22 +19,22 @@ var IdCounter = {
         //we count distinct IDs here. This function is not limited to any number of identities.
         var distinctIndexes = [];
 
-        for(var index = 0; index < IDs.length; index++) {
+        for (var index = 0; index < IDs.length; index++) {
             distinctIndexes[index] = -1;
         }
 
-        for(var i = 0; i < IDs.length; i++) {
+        for (var i = 0; i < IDs.length; i++) {
             /*
              skip over already tested identities.
              We want to minimize the use of the relatively heavy areDifferentIDs function,
              due to the long name lookup.
              */
-            if(distinctIndexes[i] > -1)
+            if (distinctIndexes[i] > -1)
                 continue;
 
             distinctIndexes[i] = i;
-            for(var j = i + 1; j < IDs.length; j++) {
-                if(!IdCounter.areDifferentIDs(IDs[i], IDs[j])) {
+            for (var j = i + 1; j < IDs.length; j++) {
+                if (!IdCounter.areDifferentIDs(IDs[i], IDs[j])) {
                     distinctIndexes[j] = i;
                 }
             }
@@ -43,25 +43,103 @@ var IdCounter = {
         //find the maximum identity # in the array.
         var max = -1;
 
-        for(i = 0; i < distinctIndexes.length;  i++) {
-            max = Math.max(max,distinctIndexes[i]);
+        for (i = 0; i < distinctIndexes.length; i++) {
+            max = Math.max(max, distinctIndexes[i]);
         }
 
         return max + 1;
     },
 
     areDifferentIDs: function (id1, id2) {
-        //check first name (allow aliases / non strict)
-        var fnResult = IdCounter.countDistinctNames(id1.first, id2.first, false, false);
+        if (!id1.isNoC && !id2.isNoC) {
+            //check first name (allow aliases / non strict)
+            var fnResult = IdCounter.countDistinctNames(id1.first, id2.first, false, false);
 
-        //check middle name. middle names act like first names, so allow aliases
-        var midResult = IdCounter.countDistinctNames(id1.middle, id2.middle, true, false);
+            //check middle name. middle names act like first names, so allow aliases
+            var midResult = IdCounter.countDistinctNames(id1.middle, id2.middle, true, false);
 
-        //check last names. Factor ONLY for typos (strict), and don't bother with aliases, because last names do not have them.
-        var lastResult = IdCounter.countDistinctNames(id1.last, id2.last, false, true);
+            //check last names. Factor ONLY for typos (strict), and don't bother with aliases, because last names do not have them.
+            var lastResult = IdCounter.countDistinctNames(id1.last, id2.last, false, true);
 
-        return Math.max(fnResult, midResult, lastResult) > 1;
+            return Math.max(fnResult, midResult, lastResult) > 1;
+        } else {
+            /*
+              since name on card parsing may get it wrong due to ambiguous names,
+              we may need to re-interpret them with contextual info from another identity
+            */
+
+            if (id2.isNoC) {
+                id1 = IdCounter.contextualReInterpretNoC(id2, id1);
+            } else {
+                id1 = IdCounter.contextualReInterpretNoC(id1, id2);
+            }
+
+            return IdCounter.areDifferentIDs(id1, id2);
+        }
     },
+
+    //re-parses identity generated from the Name On Card field with contextual information
+    contextualReInterpretNoC: function (nocId, id2) {
+        if (!nocId.isNoC && !id2.isNoC)
+            return nocId;
+
+        //allow re-interpretation once only to get dodgy scenarios right
+        nocId.isNoC = false;
+
+        var oldID = {
+            first: nocId.first,
+            middle: nocId.middle,
+            last: nocId.last
+        };
+
+        // Goes over all permutations (three fields: 3! = 6).
+        if (matchIDs(id2, nocId.first, nocId.middle, nocId.last)) {
+           return nocId;
+        } else if (matchIDs(id2, nocId.middle, nocId.first, nocId.last)) {
+            nocId.first = oldID.middle;
+            nocId.middle = oldID.first;
+            nocId.last = oldID.last;
+        } else if (matchIDs(id2, nocId.first, nocId.last, nocId.middle)) {
+            nocId.first = oldID.first;
+            nocId.middle = oldID.last;
+            nocId.last = oldID.middle;
+        } else if (matchIDs(id2, nocId.last, nocId.first, nocId.middle)) {
+            nocId.first = oldID.last;
+            nocId.middle = oldID.first;
+            nocId.last = oldID.middle;
+        } else if (matchIDs(id2, nocId.last, nocId.middle, nocId.first)) {
+            nocId.first = oldID.last;
+            nocId.middle = oldID.middle;
+            nocId.last = oldID.first;
+        } else if (matchIDs(id2, nocId.middle, nocId.last, nocId.first)) {
+            nocId.first = oldID.middle;
+            nocId.middle = oldID.last;
+            nocId.last = oldID.first;
+        }
+
+        return nocId;
+
+        function matchIDs(id1, fn, mn, ln) {
+            return matchedNames(id1.first, fn) && matchedNames(id1.middle, mn) && matchedNames(id1.last, ln);
+
+            function matchedNames(name1, name2) {
+                if (name1 === name2)
+                    return true;
+
+                if(!(name1.length === 0) ^ !(name2.length === 0))
+                    return true;
+
+                if (name1.length === 1 && name2[0] === name1)
+                    return true;
+
+                if (name2.length === 1 && name1[0] === name2)
+                    return true;
+
+                return IdCounter.getAllAliases(name1).indexOf(name2) > -1;
+            }
+        }
+    },
+
 
     countDistinctNames: function (name1, name2, isMiddle, isStrict) {
         return 1 + IdCounter.areDifferentNames(name1, name2, isMiddle, isStrict);
@@ -109,7 +187,7 @@ var IdCounter = {
                     n1u += name1[i];
                     n2u += name2[i];
                 }
-            if (mistakes <= 1 || checkLetterSwap(n1u,n2u,2)) {
+            if (mistakes <= 1 || checkLetterSwap(n1u, n2u, 2)) {
                 return 0;
             }
         }
@@ -123,12 +201,12 @@ var IdCounter = {
                     return true;
         }
 
-        function checkLetterSwap(s1,s2,tolerance) {
-            if(s1.length > tolerance || s2.length > tolerance || s1.length !== s2.length)
+        function checkLetterSwap(s1, s2, tolerance) {
+            if (s1.length > tolerance || s2.length > tolerance || s1.length !== s2.length)
                 return false;
 
-            for(var index = 0; index < s1.length; index++) {
-                if(s1[index] !== s2[s2.length - 1 - index])
+            for (var index = 0; index < s1.length; index++) {
+                if (s1[index] !== s2[s2.length - 1 - index])
                     return false;
             }
 
@@ -141,13 +219,14 @@ var IdCounter = {
         var identity = {
             first: "",
             middle: "",
-            last: lastName || ""
+            last: lastName || "",
+            isNoC: false,
         };
 
         //remove punctuation and split the first name to its components
-        var fnWords = firstName.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        var fnWords = firstName.trim().replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(' ');
 
-        if(arguments.length === 2) {
+        if (arguments.length === 2) {
             if (fnWords.length === 1) {
                 //only first name present (no middle)
                 identity.first = fnWords[0];
@@ -156,7 +235,7 @@ var IdCounter = {
                 //middle name exists
                 //check that the first name is an actual first name.
                 //because our csv contains only first names we can leverage it for this test
-                if (IdCounter.isFirstName(fnWords[0])) {
+                if (IdCounter.isFirstName(fnWords[0]) || fnWords[1].length === 1) {
                     identity.first = fnWords[0];
                     identity.middle = fnWords[1];
                 }
@@ -166,8 +245,10 @@ var IdCounter = {
                 }
             }
         } else { //this means we got the Name On Card case to parse.
+            identity.isNoC = true;
+
             /*
-            Possible Scenarios: (punctuation won't be available in actual cases - just for ease of read)
+             Possible Scenarios: (punctuation won't be available in actual cases - just for ease of read)
              - Deborah S Morgan
              - Morgan, Deborah S
              - Deborah Sophie Morgan
@@ -177,13 +258,13 @@ var IdCounter = {
              */
 
             //split to middle+first and last names
-            var splitNames = (function() {
+            var splitNames = (function () {
                 var attr = [];
                 var firstsAndMids = [];
                 var lastName;
 
-                //catalog names
-                for(var i = 0; i < fnWords.length; i++) {
+                //classify names
+                for (var i = 0; i < fnWords.length; i++) {
                     attr.push({
                         canBeFirstOrMiddle: false,
                         isMiddle: false,
@@ -191,9 +272,9 @@ var IdCounter = {
                         blackListed: false
                     });
 
-                    if(IdCounter.isFirstName(fnWords[i]))
+                    if (IdCounter.isFirstName(fnWords[i]))
                         attr[i].canBeFirstOrMiddle = true;
-                    if(fnWords[i].length == 1) {
+                    if (fnWords[i].length == 1) {
                         attr[i].canBeFirstOrMiddle = false;
                         attr[i].isMiddle = true;
                     } else {
@@ -203,28 +284,28 @@ var IdCounter = {
                 }
 
                 //choose first name if there is 100% middle name after it
-                for(i = 1; i < attr.length; i++) {
-                    if(attr[i].isMiddle) {
-                        firstsAndMids.push(fnWords[i-1]);
-                        attr[i-1].blackListed = true;
+                for (i = 1; i < attr.length; i++) {
+                    if (attr[i].isMiddle) {
+                        firstsAndMids.push(fnWords[i - 1]);
+                        attr[i - 1].blackListed = true;
                     }
                 }
 
                 //choose last name
-                for(i = 0; i < attr.length; i++) {
+                for (i = 0; i < attr.length; i++) {
                     //it's surely last name if it can be last (according to the csv), cannot be first/middle and it's the first or last word in the NoC
-                    if(!attr[i].blackListed && attr[i].canBeLast == true && attr[i].canBeFirstOrMiddle == false && (i == 0 || i == attr.length - 1)) {
+                    if (!attr[i].blackListed && attr[i].canBeLast == true && attr[i].canBeFirstOrMiddle == false && (i == 0 || i == attr.length - 1)) {
                         lastName = fnWords[i];
                         attr[i].blackListed = true;
                         break;
                     }
                 }
 
-                if(typeof lastName == 'undefined') {
+                if (typeof lastName == 'undefined') {
                     //no last name was chosen on the previous step, so go to worse case
-                    for(i = 0; i < attr.length; i++) {
+                    for (i = 0; i < attr.length; i++) {
                         //choose last name that may be first or middle. Ambiguity.
-                        if(!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
+                        if (!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
                             lastName = fnWords[i];
                             attr[i].blackListed = true;
                             break;
@@ -233,8 +314,8 @@ var IdCounter = {
                 }
 
                 //all the other names are first or middle by definition
-                for(i = 0; i < attr.length; i++) {
-                    if(!attr[i].blackListed) {
+                for (i = 0; i < attr.length; i++) {
+                    if (!attr[i].blackListed) {
                         firstsAndMids.push(fnWords[i]);
                     }
                 }
@@ -251,9 +332,9 @@ var IdCounter = {
             identity.first = fNames[0];
 
             //check if there a middle name
-            if(fNames.length > 1) {
+            if (fNames.length > 1) {
                 //make sure you get all middle names (if there are more than one)
-                for(var i = 1; i < fNames.length; i++) {
+                for (var i = 1; i < fNames.length; i++) {
                     identity.middle += fNames[i];
                 }
             }
@@ -283,26 +364,26 @@ var IdCounter = {
         return allNicknames;
     },
 
-    isFirstName: function(name) {
-        if(name.length < 2)
+    isFirstName: function (name) {
+        if (name.length < 2)
             return false;
 
         //our name lists are sorted
-        return IdCounter.binarySearch(IdCounter.firstNames, name) !== null;
+        return IdCounter.binarySearch(IdCounter.firstNames, name) !== null || IdCounter.getAllAliases(name).length > 0;
     },
 
-    isLastName: function(name) {
+    isLastName: function (name) {
         //our name lists are sorted
         return IdCounter.binarySearch(IdCounter.lastNames, name) !== null;
     },
 
-    binarySearch: function(array, item) {
+    binarySearch: function (array, item) {
         var left = 0;
         var right = array.length - 1;
         var middle = 0;
 
         while (left <= right) {
-            middle = Math.floor((left + right)/2);
+            middle = Math.floor((left + right) / 2);
 
             if (array[middle] > item)
                 right = middle - 1;
@@ -322,30 +403,30 @@ var IdCounter = {
         //read and split to lines
         var csv = fs.readFileSync('aliases.csv');
 
-        var names =  csv.toString().split('\n');
+        var names = csv.toString().split('\n');
 
-        for(var i =0; i < names.length; i++) {
-            names[i] = names[i].replace('\r','');
+        for (var i = 0; i < names.length; i++) {
+            names[i] = names[i].replace('\r', '');
             names[i] = names[i].toLowerCase();
         }
 
         return names;
-    } ()),
+    }()),
 
     firstNames: (function () {
         var fs = require('fs');
 
         //read and split to lines
         var csv = fs.readFileSync('first_names.csv');
-        var names =  csv.toString().split('\n');
+        var names = csv.toString().split('\n');
 
-        for(var i =0; i < names.length; i++) {
-            names[i] = names[i].replace('\r','');
+        for (var i = 0; i < names.length; i++) {
+            names[i] = names[i].replace('\r', '');
             names[i] = names[i].toLowerCase();
         }
 
         return names;
-    } ()),
+    }()),
 
     //get last names from the csv
     lastNames: (function () {
@@ -353,12 +434,12 @@ var IdCounter = {
 
         //read and split to lines
         var csv = fs.readFileSync('last_names.csv');
-        var names =  csv.toString().split('\r');
+        var names = csv.toString().split('\r');
 
-        for(var i =0; i < names.length; i++) {
-            names[i] = names[i].replace('\r','');
+        for (var i = 0; i < names.length; i++) {
+            names[i] = names[i].replace('\r', '');
             names[i] = names[i].toLowerCase();
         }
         return names;
-    } ())
+    }())
 };

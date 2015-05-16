@@ -26,25 +26,25 @@ describe('\"Deborah\" name tests', function () {
 
 
 //random names tests
-describe('1,500 Random name tests', function () {
+describe('30 Random name tests', function () {
     var input;
     var data = prepareData();
 
-    for (var i = 0; i < 500; i++) {
+    for (var i = 0; i < 10; i++) {
         input = generateRandomTest(1, data);
         it('Random input with 1 identity \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
-    for (var i = 0; i < 500; i++) {
+    for (var i = 0; i < 10; i++) {
         input = generateRandomTest(2, data);
         it('Random input with 2 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
-    for (var i = 0; i < 500; i++) {
+    for (var i = 0; i < 10; i++) {
         input = generateRandomTest(3, data);
         it('Random input with 3 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
