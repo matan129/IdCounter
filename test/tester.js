@@ -3,7 +3,8 @@ var validator = require('../validator.js');
 
 //"manual" tests
 describe('\"Deborah\" name tests', function () {
-    this.timeout(100000);
+    this.timeout(30000); //TODO improve name lookup.
+
     it('Deborah Egli & Debbie Egli', function () {
         assert.equal(validator.countUniqueNames('Deborah', 'Egli', 'Debbie', 'Egli', 'Debbie Egli'), 1);
     });
@@ -31,30 +32,31 @@ describe('15 Random name tests', function () {
     this.timeout(30000); //TODO improve name lookup.
 
     var input;
+    var data = prepareData();
 
     for (var i = 0; i < 5; i++) {
-        input = generateRandomTest(1);
+        input = generateRandomTest(1, data);
         it('Random input with 1 identity \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for (var i = 0; i < 5; i++) {
-        input = generateRandomTest(2);
+        input = generateRandomTest(2, data);
         it('Random input with 2 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for (var i = 0; i < 5; i++) {
-        input = generateRandomTest(3);
+        input = generateRandomTest(3, data);
         it('Random input with 3 identities \n ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 });
 
-function generateRandomTest(idNumber) {
+function prepareData() {
     //read data
     var aliasesCSV = 'aliases.csv';
     var lastNamesCSV = 'last_names.csv';
@@ -66,8 +68,18 @@ function generateRandomTest(idNumber) {
 
     //remove control characters (like \r)
     for (var i = 0; i < famLines.length; i++) {
-        famLines[i] = famLines[i].substr(0, famLines[i].length - 1);
+        famLines[i] = famLines[i].replace('\r', '');
     }
+
+    return {
+        fam: famLines,
+        last: lastNames
+    };
+}
+
+function generateRandomTest(idNumber, data) {
+    var famLines = data.fam;
+    var lastNames = data.last;
 
     //build identities.
     var fn1, fn2, fn3, ln1, ln2, ln3;

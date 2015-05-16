@@ -318,7 +318,15 @@ var IdCounter = {
 
         //read and split to lines
         var csv = fs.readFileSync('aliases.csv');
-        return csv.toString().split('\r\n');
+
+        var names =  csv.toString().split('\n');
+
+        for(var i =0; i < names.length; i++) {
+            names[i] = names[i].replace('\r','');
+            names[i] = names[i].toLowerCase();
+        }
+
+        return names;
     } ()),
 
     firstNames: (function () {
@@ -326,9 +334,10 @@ var IdCounter = {
 
         //read and split to lines
         var csv = fs.readFileSync('first_names.csv');
-        var names =  csv.toString().split('\r\n');
+        var names =  csv.toString().split('\n');
 
         for(var i =0; i < names.length; i++) {
+            names[i] = names[i].replace('\r','');
             names[i] = names[i].toLowerCase();
         }
 
@@ -342,7 +351,9 @@ var IdCounter = {
         //read and split to lines
         var csv = fs.readFileSync('last_names.csv');
         var names =  csv.toString().split('\r');
+
         for(var i =0; i < names.length; i++) {
+            names[i] = names[i].replace('\r','');
             names[i] = names[i].toLowerCase();
         }
         return names;
