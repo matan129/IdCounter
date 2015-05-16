@@ -40,21 +40,21 @@ describe('15 Random name tests', function() {
     for(var i = 0; i < 5; i++) {
         input = generateRandomTest(1);
         it('Random input with 1 identity \n ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), 1);
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for(var i = 0; i < 5; i++) {
         input = generateRandomTest(2);
         it('Random input with 2 identities \n ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), 2);
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for(var i = 0; i < 5; i++) {
         input = generateRandomTest(3);
         it('Random input with 3 identities \n ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), 3);
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 });
