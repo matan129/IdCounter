@@ -13,7 +13,6 @@ http.createServer(function (req, res) {
             var identitiesResult = validator.countUniqueNames(req.post.bFirstName, req.post.bLastName,
                 req.post.sFirstName, req.post.sLastName, req.post.bNameOnCard);
 
-            console.log(identitiesResult);
             //deliver response
             res.writeHead(200, "OK", {'Content-Type': 'text/plain'});
             res.write("found " + identitiesResult + " identities.");

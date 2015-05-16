@@ -18,12 +18,12 @@ var IdCounter = {
     countIdentities: function (IDs) {
         var count = 0;
         for(var i = 0; i < IDs.length; i++) {
-            count += IdCounter.areIdenticalIDs(IDs[i],IDs[(i+1)%IDs.length]);
+            count += IdCounter.areDifferentIDs(IDs[i],IDs[(i+1)%IDs.length]);
         }
         return Math.max(count,1);
     },
 
-    areIdenticalIDs: function (id1, id2) {
+    areDifferentIDs: function (id1, id2) {
         //check first name (allow aliases / non strict)
         var fnResult = IdCounter.countDistinctNames([id1.first, id2.first], false, false);
 
@@ -34,23 +34,27 @@ var IdCounter = {
         var lastResult = IdCounter.countDistinctNames([id1.last, id2.last], false, true);
 
         if (Math.max(fnResult,midResult,lastResult) > 1)
-            return 1;
-        return 0;
+            return true;
+        return false;
     },
 
     countDistinctNames: function (names, isMiddle, isStrict) {
+        if(names.length == 2) {
+            return 1 + IdCounter.areDifferentNames(names[0],names[1],isMiddle,isStrict);
+        }
+
         var count = 0;
         for(var i = 0; i < names.length; i++) {
-            count += IdCounter.areIdenticalNames(names[i],names[(i+1)%names.length],isMiddle,isStrict);
+            count += IdCounter.areDifferentNames(names[i],names[(i+1)%names.length],isMiddle,isStrict);
         }
         return Math.max(count,1);
     },
 
     //checks if two names mean the same according to our CSV list.
-    areIdenticalNames: function (name1, name2, isMiddle, isStrict) {
+    areDifferentNames: function (name1, name2, isMiddle, isStrict) {
         //naive check, to spare some CPU
         if (name1 === name2)
-            return 0;
+            return false;
 
         //if not in strict mode, check for aliases
         if (!isStrict) {
@@ -59,11 +63,11 @@ var IdCounter = {
                 //allow only one middle name to be non-existent, so we use XOR workaround.
                 //basically we allow scenarios like "Deborah S. Egli" and "Debora Egli" to be OK
                 if (!(name1.length === 0) ^ !(name2.length === 0))
-                    return 0;
+                    return false;
 
                 //check if one name is a short name for the another (i.e. "J." for Genuine in Michael J. Fox. Wait, what?
                 if (!checkMiddleShorting(name1, name2) ^ !checkMiddleShorting(name2, name1)) {
-                    return 0;
+                    return false;
                 }
             }
 
@@ -72,9 +76,7 @@ var IdCounter = {
 
             //if the name is an alias of the other, return true
             if (aliases.indexOf(name2) > -1)
-                return 0;
-
-
+                return false;
         }
 
         //factor in for typos (allow up to one mistake - one character or one character swap)
@@ -91,11 +93,11 @@ var IdCounter = {
                     n2u += name2[i];
                 }
             if (mistakes <= 1 || checkLetterSwap(n1u,n2u,2)) {
-                return 0;
+                return false;
             }
         }
 
-        return 1;
+        return true;
 
         //INNER FUNCTIONS
         function checkMiddleShorting(name1, name2) {
@@ -158,7 +160,7 @@ var IdCounter = {
              */
 
             //split to middle+first and last names
-            var split = (function() {
+            var splitNames = (function() {
                 var attr = [];
                 var firstsAndMids = [];
                 var lastName;
@@ -183,8 +185,8 @@ var IdCounter = {
                     }
                 }
 
-                //choose first name if there 100% middle name after it
-                for(i = 0; i < attr.length; i++) {
+                //choose first name if there is 100% middle name after it
+                for(i = 1; i < attr.length; i++) {
                     if(attr[i].isMiddle) {
                         firstsAndMids.push(fnWords[i-1]);
                         attr[i-1].blackListed = true;
@@ -201,7 +203,7 @@ var IdCounter = {
                 }
 
                 if(typeof lastName == 'undefined') {
-                    //no last name was chosen, so go back to worse case
+                    //no last name was chosen, so go to worse case
                     for(i = 0; i < attr.length; i++) {
                         if(!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
                             lastName = fnWords[i];
@@ -211,7 +213,7 @@ var IdCounter = {
                     }
                 }
 
-                //all the other names are first or middle be definition
+                //all the other names are first or middle by definition
                 for(i = 0; i < attr.length; i++) {
                     if(!attr[i].blackListed) {
                         firstsAndMids.push(fnWords[i]);
@@ -224,7 +226,7 @@ var IdCounter = {
                 };
             }());
 
-            var fNames = split.firstAndMiddle;
+            var fNames = splitNames.firstAndMiddle;
 
             //as you can see in the possible scenarios comment above, the first name will always be before the middle.
             identity.first = fNames[0];
@@ -238,7 +240,7 @@ var IdCounter = {
             }
 
             //set last name
-            identity.last = split.last;
+            identity.last = splitNames.last;
         }
 
         return identity;
