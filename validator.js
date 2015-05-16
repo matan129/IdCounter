@@ -16,38 +16,55 @@ exports.countUniqueNames = function (billFirstName,billLastName,shipFirstName,sh
 
 var IdCounter = {
     countIdentities: function (IDs) {
-        var count = 0;
-        for(var i = 0; i < IDs.length; i++) {
-            count += IdCounter.areDifferentIDs(IDs[i],IDs[(i+1)%IDs.length]);
+        //we count distinct IDs here. This function is not limited to any number of identities.
+        var distinctIndexes = [];
+
+        for(var index = 0; index < IDs.length; index++) {
+            distinctIndexes[index] = -1;
         }
-        return Math.max(count,1);
+
+        for(var i = 0; i < IDs.length; i++) {
+            /*
+             skip over already tested identities.
+             We want to minimize the use of the relatively heavy areDifferentIDs function,
+             due to the long name lookup.
+             */
+            if(distinctIndexes[i] > -1)
+                continue;
+
+            distinctIndexes[i] = i;
+            for(var j = i + 1; j < IDs.length; j++) {
+                if(!IdCounter.areDifferentIDs(IDs[i], IDs[j])) {
+                    distinctIndexes[j] = i;
+                }
+            }
+        }
+
+        //find the maximum identity # in the array.
+        var max = -1;
+
+        for(i = 0; i < distinctIndexes.length;  i++) {
+            max = Math.max(max,distinctIndexes[i]);
+        }
+
+        return max + 1;
     },
 
     areDifferentIDs: function (id1, id2) {
         //check first name (allow aliases / non strict)
-        var fnResult = IdCounter.countDistinctNames([id1.first, id2.first], false, false);
+        var fnResult = IdCounter.countDistinctNames(id1.first, id2.first, false, false);
 
         //check middle name. middle names act like first names, so allow aliases
-        var midResult = IdCounter.countDistinctNames([id1.middle, id2.middle], true, false);
+        var midResult = IdCounter.countDistinctNames(id1.middle, id2.middle, true, false);
 
         //check last names. Factor ONLY for typos (strict), and don't bother with aliases, because last names do not have them.
-        var lastResult = IdCounter.countDistinctNames([id1.last, id2.last], false, true);
+        var lastResult = IdCounter.countDistinctNames(id1.last, id2.last, false, true);
 
-        if (Math.max(fnResult,midResult,lastResult) > 1)
-            return true;
-        return false;
+        return Math.max(fnResult, midResult, lastResult) > 1;
     },
 
-    countDistinctNames: function (names, isMiddle, isStrict) {
-        if(names.length == 2) {
-            return 1 + IdCounter.areDifferentNames(names[0],names[1],isMiddle,isStrict);
-        }
-
-        var count = 0;
-        for(var i = 0; i < names.length; i++) {
-            count += IdCounter.areDifferentNames(names[i],names[(i+1)%names.length],isMiddle,isStrict);
-        }
-        return Math.max(count,1);
+    countDistinctNames: function (name1, name2, isMiddle, isStrict) {
+        return 1 + IdCounter.areDifferentNames(name1, name2, isMiddle, isStrict);
     },
 
     //checks if two names mean the same according to our CSV list.
@@ -195,6 +212,7 @@ var IdCounter = {
 
                 //choose last name
                 for(i = 0; i < attr.length; i++) {
+                    //it's surely last name if it can be last (according to the csv), cannot be first/middle and it's the first or last word in the NoC
                     if(!attr[i].blackListed && attr[i].canBeLast == true && attr[i].canBeFirstOrMiddle == false && (i == 0 || i == attr.length - 1)) {
                         lastName = fnWords[i];
                         attr[i].blackListed = true;
@@ -203,8 +221,9 @@ var IdCounter = {
                 }
 
                 if(typeof lastName == 'undefined') {
-                    //no last name was chosen, so go to worse case
+                    //no last name was chosen on the previous step, so go to worse case
                     for(i = 0; i < attr.length; i++) {
+                        //choose last name that may be first or middle. Ambiguity.
                         if(!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
                             lastName = fnWords[i];
                             attr[i].blackListed = true;
@@ -299,7 +318,7 @@ var IdCounter = {
 
         //read and split to lines
         var csv = fs.readFileSync('aliases.csv');
-        return csv.toString().split('\n');
+        return csv.toString().split('\r\n');
     } ()),
 
     firstNames: (function () {
@@ -307,11 +326,12 @@ var IdCounter = {
 
         //read and split to lines
         var csv = fs.readFileSync('first_names.csv');
-        var names =  csv.toString().split('\r');
+        var names =  csv.toString().split('\r\n');
+
         for(var i =0; i < names.length; i++) {
             names[i] = names[i].toLowerCase();
-            names[i] = names[i].replace('\n','');
         }
+
         return names;
     } ()),
 
