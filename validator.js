@@ -67,8 +67,8 @@ var IdCounter = {
             return Math.max(fnResult, midResult, lastResult) > 1;
 
         } else {
-             //since name on card parsing may get it wrong due to ambiguous names,
-             //we may need to re-interpret them with contextual info from another identity
+            //since name on card parsing may get it wrong due to ambiguous names,
+            //we may need to re-interpret them with contextual info from another identity
 
             if (id2.isNoC) {
                 id2 = IdCounter.contextualReInterpretNoC(id2, id1);
@@ -99,6 +99,8 @@ var IdCounter = {
         if (matchIDs(id2, nocId.first, nocId.middle, nocId.last)) {
             //since we haven't change anything let it be re-parsed later
             nocId.isNoC = true;
+
+            //skip on next iteration at areIdenticalIDs - we don't want a loop forever.
             nocId.skip = true;
         } else if (matchIDs(id2, nocId.middle, nocId.first, nocId.last)) {
             nocId.first = oldID.middle;

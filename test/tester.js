@@ -32,7 +32,7 @@ describe('3000 Random name tests', function () {
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(1, data);
-        it('Random input with 1 identity ' + input.desc, function () {
+        it('Random input with 1 identity \n' + input.desc, function () {
             //console.log(input.desc);
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
@@ -40,7 +40,7 @@ describe('3000 Random name tests', function () {
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(2, data);
-        it('Random input with 2 identities ' + input.desc, function () {
+        it('Random input with 2 identities \n' + input.desc, function () {
             //console.log(input.desc);
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
@@ -48,7 +48,7 @@ describe('3000 Random name tests', function () {
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(3, data);
-        it('Random input with 3 identities ' + input.desc, function () {
+        it('Random input with 3 identities \n' + input.desc, function () {
             //console.log(input.desc);
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
@@ -133,8 +133,8 @@ function generateRandomTest(idNumber, data) {
         avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
         mid1 = avaliableFams[randomize(0, avaliableFams.length, true)];
 
-        if(Math.random() > 0.5) {
-            if(Math.random() > 0.5) {
+        if (Math.random() > 0.5) {
+            if (Math.random() > 0.5) {
                 //use identical name
                 mid2 = mid1;
             } else {
@@ -142,7 +142,7 @@ function generateRandomTest(idNumber, data) {
                 mid2 = mid1[0];
             }
         } else {
-            if(Math.random() > 0.5) {
+            if (Math.random() > 0.5) {
                 //use identical name
                 mid3 = mid1;
             } else {
@@ -155,10 +155,10 @@ function generateRandomTest(idNumber, data) {
     var input = {
         bFn: fn1 + " " + mid1,
         bLn: ln1,
-        sFn: fn2  + " " + mid2,
+        sFn: fn2 + " " + mid2,
         sLn: ln2,
-        bNoC: fn3  + " " + mid3 + " " + ln3,
-        desc: "-> " + fn1 + " " + mid1 + " " + ln1 + "\n -> " + fn2 + " " + mid2+ " " + ln2 + "\n -> " + fn3 + " " + mid3 + " " + ln3,
+        bNoC: fn3 + " " + mid3 + " " + ln3,
+        desc: "-> " + fn1 + " " + mid1 + " " + ln1 + "\n -> " + fn2 + " " + mid2 + " " + ln2 + "\n -> " + fn3 + " " + mid3 + " " + ln3,
         idNumber: idNumber
     };
 
