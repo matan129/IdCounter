@@ -287,29 +287,32 @@ var IdCounter = {
         if(name.length < 2)
             return false;
 
-        for(var i = 0; i < IdCounter.lastNames.length; i++)
-            if(IdCounter.getAllAliases(name).length > 0)
-                return true;
-
-        for(var i = 0; i < IdCounter.firstNames.length; i++)
-            if(IdCounter.firstNames[i] === name)
-                return true;
-
-        return false;
+        //our name lists are sorted
+        return IdCounter.binarySearch(IdCounter.firstNames, name) !== null;
     },
 
     isLastName: function(name) {
-        //return IdCounter.lastNames.indexOf(name) > -1;
-        for(var i = 0; i < IdCounter.lastNames.length; i++) {
-            //since the list is alphabetical skip irrelevant records
-            if(name < IdCounter.lastNames[i])
-                return false;
+        //our name lists are sorted
+        return IdCounter.binarySearch(IdCounter.lastNames, name) !== null;
+    },
 
-            if(name === IdCounter.lastNames[i])
-                return true;
+    binarySearch: function(array, item) {
+        var left = 0;
+        var right = array.length - 1;
+        var middle = 0;
+
+        while (left <= right) {
+            middle = Math.floor((left + right)/2);
+
+            if (array[middle] > item)
+                right = middle - 1;
+            else if (array[middle] < item)
+                left = middle + 1;
+            else
+                return middle
         }
 
-        return false;
+        return null;
     },
 
     //get first names aliases from the csv

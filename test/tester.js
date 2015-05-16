@@ -128,14 +128,15 @@ function generateRandomTest(idNumber, data) {
         ln3 = ln2;
     }
 
-    /*
-    if(typeof fn1 === 'undefined' || typeof fn2 === 'undefined' || typeof fn3 === 'undefined' ||
-        typeof ln1 === 'undefined' || typeof ln2 === 'undefined' || typeof ln3 === 'undefined' ||
-        fn1 === 'undefined' || fn2 === 'undefined' || fn3 === 'undefined' ||
-        ln1 === 'undefined' || ln2 === 'undefined' || ln3 === 'undefined') {
-        console.log("something fishy is going on!");
-    }
-    */
+/*
+   if(Math.random > 0.5) {
+       //give some chance for middle names to pop in
+       avaliableFams = famLines[randomize(0, famLines.length, true)].split(',');
+       var middle = avaliableFams[randomize(0, avaliableFams.length - 1, true)];
+
+       fn2 += " " + middle;
+       fn3 += " " + middle.charAt(0) + ".";
+   }
 
     
     if(Math.random() > 0.75) {
@@ -187,7 +188,7 @@ function generateRandomTest(idNumber, data) {
             }
         }
     }
-    
+*/
     
     return {
         bFn: fn1,
@@ -202,14 +203,22 @@ function generateRandomTest(idNumber, data) {
 
 
 function doTypo(name) {
-    var index = randomize(0,name.length,true);
+    var index;
+
+    do {
+        index = randomize(0,name.length,true);
+    } while(name[index] !== ' ');
 
     //97 - 122 (including both ends) is the ASCII range for english non-capital letters
     return setCharAt(name,index,String.fromCharCode(randomize(97,123,true)));
 }
 
 function doLetterSwap(name) {
-    var index = randomize(0,name.length - 1,true);
+    var index;
+
+    do {
+        index = randomize(0,name.length,true);
+    } while(name[index] !== ' ' && name[index + 1] !== ' ');
 
     var temp  = name[index + 1];
     name = setCharAt(name,index + 1,name[index]);
