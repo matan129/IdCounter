@@ -66,8 +66,13 @@ function generateRandomTest(idNumber){
 
     //read names fro the CSVs. fam stands for "first and middle" (names)
     var fs = require('fs');
-    var famLines = fs.readFileSync(aliasesCSV).toString().split('\r\n');
+    var famLines = fs.readFileSync(aliasesCSV).toString().split('\n');
     var lastNames = fs.readFileSync(lastNamesCSV).toString().split('\r');
+
+    //remove control characters (like \r)
+    for(var i = 0; i < famLines.length; i++) {
+        famLines[i] = famLines[i].substr(0,famLines[i].length - 1);
+    }
 
     //build identities.
     var fn1, fn2, fn3, ln1, ln2, ln3;
