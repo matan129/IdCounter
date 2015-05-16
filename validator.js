@@ -71,7 +71,7 @@ var IdCounter = {
     areDifferentNames: function (name1, name2, isMiddle, isStrict) {
         //naive check, to spare some CPU
         if (name1 === name2)
-            return false;
+            return 0;
 
         //if not in strict mode, check for aliases
         if (!isStrict) {
@@ -80,11 +80,11 @@ var IdCounter = {
                 //allow only one middle name to be non-existent, so we use XOR workaround.
                 //basically we allow scenarios like "Deborah S. Egli" and "Debora Egli" to be OK
                 if (!(name1.length === 0) ^ !(name2.length === 0))
-                    return false;
+                    return 0;
 
                 //check if one name is a short name for the another (i.e. "J." for Genuine in Michael J. Fox. Wait, what?
                 if (!checkMiddleShorting(name1, name2) ^ !checkMiddleShorting(name2, name1)) {
-                    return false;
+                    return 0;
                 }
             }
 
@@ -93,7 +93,7 @@ var IdCounter = {
 
             //if the name is an alias of the other, return true
             if (aliases.indexOf(name2) > -1)
-                return false;
+                return 0;
         }
 
         //factor in for typos (allow up to one mistake - one character or one character swap)
@@ -110,11 +110,11 @@ var IdCounter = {
                     n2u += name2[i];
                 }
             if (mistakes <= 1 || checkLetterSwap(n1u,n2u,2)) {
-                return false;
+                return 0;
             }
         }
 
-        return true;
+        return 1;
 
         //INNER FUNCTIONS
         function checkMiddleShorting(name1, name2) {

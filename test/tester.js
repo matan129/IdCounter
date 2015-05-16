@@ -2,7 +2,6 @@ var assert = require('assert');
 var validator = require('../validator.js');
 
 //"manual" tests
-/*
 describe('\"Deborah\" name tests', function() {
     this.timeout(100000);
     it('Deborah Egli & Deborah Egli',  function (done) {
@@ -30,7 +29,7 @@ describe('\"Deborah\" name tests', function() {
         done();
     });
 });
-*/
+
 
 //random names tests
 describe('15 Random name tests', function() {
