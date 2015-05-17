@@ -1,6 +1,33 @@
 var assert = require('assert');
 var validator = require('../validator.js');
 
+//random names tests
+describe('300 Random Name Tests', function () {
+    var input;
+    var data = prepareData();
+
+    for (var i = 0; i < 100; i++) {
+        input = generateRandomTest(1, data);
+        it('Random input with 1 identity: ' + input.desc, function () {
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
+        });
+    }
+
+    for (var i = 0; i < 100; i++) {
+        input = generateRandomTest(2, data);
+        it('Random input with 2 identities: ' + input.desc, function () {
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
+        });
+    }
+
+    for (var i = 0; i < 100; i++) {
+        input = generateRandomTest(3, data);
+        it('Random input with 3 identities: ' + input.desc, function () {
+            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
+        });
+    }
+});
+
 //"manual" tests
 describe('\"Deborah\" name tests', function () {
     it('Deborah Egli & Debbie Egli', function () {
@@ -29,33 +56,6 @@ describe('Extremely Ambiguous Case', function () {
     it('Samuel Luther Jackson', function () {
         assert.equal(validator.countUniqueNames('Samuel L.', 'Jackson', 'Sam', 'Jackson', 'Samuel Luther Jackson'), 1);
     });
-});
-
-//random names tests
-describe('3000 Random name tests', function () {
-    var input;
-    var data = prepareData();
-
-    for (var i = 0; i < 1000; i++) {
-        input = generateRandomTest(1, data);
-        it('Random input with 1 identity: ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
-        });
-    }
-
-    for (var i = 0; i < 1000; i++) {
-        input = generateRandomTest(2, data);
-        it('Random input with 2 identities: ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
-        });
-    }
-
-    for (var i = 0; i < 1000; i++) {
-        input = generateRandomTest(3, data);
-        it('Random input with 3 identities: ' + input.desc, function () {
-            assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
-        });
-    }
 });
 
 function prepareData() {
