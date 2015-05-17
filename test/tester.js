@@ -32,24 +32,21 @@ describe('3000 Random name tests', function () {
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(1, data);
-        it('Random input with 1 identity \n' + input.desc, function () {
-            //console.log(input.desc);
+        it('Random input with 1 identity: ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(2, data);
-        it('Random input with 2 identities \n' + input.desc, function () {
-            //console.log(input.desc);
+        it('Random input with 2 identities: ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
 
     for (var i = 0; i < 1000; i++) {
         input = generateRandomTest(3, data);
-        it('Random input with 3 identities \n' + input.desc, function () {
-            //console.log(input.desc);
+        it('Random input with 3 identities: ' + input.desc, function () {
             assert.equal(validator.countUniqueNames(input.bFn, input.bLn, input.sFn, input.sLn, input.bNoC), input.idNumber);
         });
     }
@@ -158,7 +155,7 @@ function generateRandomTest(idNumber, data) {
         sFn: fn2 + " " + mid2,
         sLn: ln2,
         bNoC: fn3 + " " + mid3 + " " + ln3,
-        desc: "-> " + fn1 + " " + mid1 + " " + ln1 + "\n -> " + fn2 + " " + mid2 + " " + ln2 + "\n -> " + fn3 + " " + mid3 + " " + ln3,
+        desc: fn1 + " " + mid1 + " " + ln1 + ", " + fn2 + " " + mid2 + " " + ln2 + ", " + fn3 + " " + mid3 + " " + ln3,
         idNumber: idNumber
     };
 

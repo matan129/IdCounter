@@ -24,11 +24,7 @@ var IdCounter = {
         }
 
         for (var i = 0; i < IDs.length; i++) {
-            /*
-             skip over already tested identities.
-             We want to minimize the use of the relatively heavy areDifferentIDs function,
-             due to the long name lookup.
-             */
+            // skip over already tested identities.
             if (distinctIndexes[i] > -1)
                 continue;
 
@@ -39,6 +35,11 @@ var IdCounter = {
                 }
             }
         }
+
+        /*
+         for IDs[] like [a,a',b,c,b'] (where a and a' are the same ID, etc.)
+         we will have distinctIndexes = [0,0,1,2,1]. So we have 3 IDs and max # of 2.
+         */
 
         //find the maximum identity # in the array.
         var max = -1;
@@ -52,6 +53,7 @@ var IdCounter = {
 
     areDifferentIDs: function (id1, id2) {
         if (!id1.isNoC && !id2.isNoC || !id1.skip || id2.skip) {
+            //reset skipping flags
             id1.skip = false;
             id2.skip = false;
 
@@ -89,18 +91,19 @@ var IdCounter = {
         //allow re-interpretation once only to get dodgy scenarios right
         nocId.isNoC = false;
 
+        //keep old info for easy swapping later
         var oldID = {
             first: nocId.first,
             middle: nocId.middle,
             last: nocId.last
         };
 
-        // Goes over all permutations (three fields: 3! = 6).
+        // Goes over all permutations (three fields (first,middle,last): 3! = 6 permutations).
         if (matchIDs(id2, nocId.first, nocId.middle, nocId.last)) {
             //since we haven't change anything let it be re-parsed later
             nocId.isNoC = true;
 
-            //skip on next iteration at areIdenticalIDs - we don't want a loop forever.
+            //skip on next iteration at areDifferentIDs - we don't want to loop forever there.
             nocId.skip = true;
         } else if (matchIDs(id2, nocId.middle, nocId.first, nocId.last)) {
             nocId.first = oldID.middle;
@@ -157,7 +160,7 @@ var IdCounter = {
     areDifferentNames: function (name1, name2, isMiddle, isStrict) {
         //naive check, to spare some CPU
         if (name1 === name2)
-            return 0;
+            return false;
 
         //if not in strict mode, check for aliases
         if (!isStrict) {
@@ -166,11 +169,11 @@ var IdCounter = {
                 //allow only one middle name to be non-existent, so we use XOR workaround.
                 //basically we allow scenarios like "Deborah S. Egli" and "Debora Egli" to be OK
                 if (!(name1.length === 0) ^ !(name2.length === 0))
-                    return 0;
+                    return false;
 
                 //check if one name is a short name for the another (i.e. "J." for Genuine in Michael J. Fox. Wait, what?
                 if (!checkMiddleShorting(name1, name2) ^ !checkMiddleShorting(name2, name1)) {
-                    return 0;
+                    return false;
                 }
             }
 
@@ -179,7 +182,7 @@ var IdCounter = {
 
             //if the name is an alias of the other, return true
             if (aliases.indexOf(name2) > -1)
-                return 0;
+                return false;
         }
 
         //factor in for typos (allow up to one mistake - one character or one character swap)
@@ -196,19 +199,20 @@ var IdCounter = {
                     n2u += name2[i];
                 }
             if (mistakes <= 1 || checkLetterSwap(n1u, n2u, 2)) {
-                return 0;
+                return false;
             }
         }
 
-        return 1;
+        return true;
 
-        //INNER FUNCTIONS
+        //checks if one name is the initial of the other (common in middle names)
         function checkMiddleShorting(name1, name2) {
             if (name1.length <= 2)  //allow dot in the end ("J.")
                 if (name2.indexOf(name1[0]) === 0) //take only the first character and check if the other name starts with it.
                     return true;
         }
 
+        //checks for letter swaps ("swaps" -> "sawps")
         function checkLetterSwap(s1, s2, tolerance) {
             if (s1.length > tolerance || s2.length > tolerance || s1.length !== s2.length)
                 return false;
@@ -224,6 +228,7 @@ var IdCounter = {
 
     //parses an identity from raw data
     parseIdentity: function (firstName, lastName) {
+        //set default values
         var identity = {
             first: "",
             middle: "",
@@ -236,28 +241,33 @@ var IdCounter = {
         var fnWords = firstName.trim().replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(' ');
 
         if (arguments.length === 2) {
+            //meaing we got both first and last names as input
+
             if (fnWords.length === 1) {
                 //only first name present (no middle)
                 identity.first = fnWords[0];
                 identity.middle = "";
-            } else if (fnWords.length === 2) { //first name + middle
-                //middle name exists
+            } else if (fnWords.length === 2) {
+                //first name + middle
+
                 //check that the first name is an actual first name.
                 //because our csv contains only first names we can leverage it for this test
                 if (IdCounter.isFirstName(fnWords[0]) || fnWords[1].length === 1) {
                     identity.first = fnWords[0];
                     identity.middle = fnWords[1];
                 }
-                else { //reverse order
+                else {
+                    //reverse order
                     identity.first = fnWords[1];
                     identity.middle = fnWords[0];
                 }
             }
-        } else { //this means we got the Name On Card case to parse.
+        } else {
+            //this means we got the Name On Card case to parse - no lastName in arguments.
             identity.isNoC = true;
 
             /*
-             Possible Scenarios: (punctuation won't be available in actual cases - just for ease of read)
+             Possible Scenarios:
              - Deborah S Morgan
              - Morgan, Deborah S
              - Deborah Sophie Morgan
@@ -266,7 +276,7 @@ var IdCounter = {
              - Morgan Deborah
              */
 
-            //split to middle+first and last names
+            //split to middle/first and last names
             var splitNames = (function () {
                 var attr = [];
                 var firstsAndMids = [];
@@ -292,7 +302,7 @@ var IdCounter = {
                     }
                 }
 
-                //choose first name if there is 100% middle name after it
+                //choose first name if there is a certain middle name after it
                 for (i = 1; i < attr.length; i++) {
                     if (attr[i].isMiddle) {
                         firstsAndMids.push(fnWords[i - 1]);
@@ -302,7 +312,7 @@ var IdCounter = {
 
                 //choose last name
                 for (i = 0; i < attr.length; i++) {
-                    //it's surely last name if it can be last (according to the csv), cannot be first/middle and it's the first or last word in the NoC
+                    //it must be last name if it can be last (according to the csv), cannot be first/middle and it's the first or last word in the NoC
                     if (!attr[i].blackListed && attr[i].canBeLast == true && attr[i].canBeFirstOrMiddle == false && (i == 0 || i == attr.length - 1)) {
                         lastName = fnWords[i];
                         attr[i].blackListed = true;
@@ -311,9 +321,10 @@ var IdCounter = {
                 }
 
                 if (typeof lastName == 'undefined') {
-                    //no last name was chosen on the previous step, so go to worse case
+                    //no last name was chosen on the previous step, so go to worse, "risky" case
                     for (i = 0; i < attr.length; i++) {
-                        //choose last name that may be first or middle. Ambiguity.
+                        //choose last name that may actually serve as first or middle - ambiguity.
+                        //we have contextual parsing later to fix misinterpreted ambiguous cases
                         if (!attr[i].blackListed && attr[i].canBeLast == true && (i == 0 || i == attr.length - 1)) {
                             lastName = fnWords[i];
                             attr[i].blackListed = true;
@@ -322,7 +333,7 @@ var IdCounter = {
                     }
                 }
 
-                //all the other names are first or middle by definition
+                //all the other names are first or middle
                 for (i = 0; i < attr.length; i++) {
                     if (!attr[i].blackListed) {
                         firstsAndMids.push(fnWords[i]);
@@ -373,19 +384,21 @@ var IdCounter = {
         return allNicknames;
     },
 
+    //checks if a given name can be a first (or middle) name
     isFirstName: function (name) {
-        if (name.length < 2)
-            return false;
-
-        //our name lists are sorted
-        return IdCounter.binarySearch(IdCounter.firstNames, name) !== null || IdCounter.getAllAliases(name).length > 0;
+        //our name lists are sorted, so binary search will be a lot more faster - O(log(n)) instead of O(n).
+        return IdCounter.binarySearch(IdCounter.firstNames, name) !== null
+            || IdCounter.getAllAliases(name).length > 0;
     },
 
+    //checks if a given name can be a last name
     isLastName: function (name) {
-        //our name lists are sorted
+        //our name lists are sorted, so binary search will be a lot more faster - O(log(n)) instead of O(n).
         return IdCounter.binarySearch(IdCounter.lastNames, name) !== null;
     },
 
+    //normal implementation of the binary search algorithm.
+    //Complexity of O(log(n)) when n is the length of the array.
     binarySearch: function (array, item) {
         var left = 0;
         var right = array.length - 1;
@@ -422,6 +435,7 @@ var IdCounter = {
         return names;
     }()),
 
+    //get first names from the csv
     firstNames: (function () {
         var fs = require('fs');
 
