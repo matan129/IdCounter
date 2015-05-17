@@ -24,6 +24,12 @@ describe('\"Deborah\" name tests', function () {
     });
 });
 
+//Extremely ambiguous case
+describe('Extremely Ambiguous Case', function () {
+    it('Samuel Luther Jackson', function () {
+        assert.equal(validator.countUniqueNames('Samuel L.', 'Jackson', 'Sam', 'Jackson', 'Samuel Luther Jackson'), 1);
+    });
+});
 
 //random names tests
 describe('3000 Random name tests', function () {

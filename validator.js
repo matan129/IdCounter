@@ -52,7 +52,7 @@ var IdCounter = {
     },
 
     areDifferentIDs: function (id1, id2) {
-        if (!id1.isNoC && !id2.isNoC || !id1.skip || id2.skip) {
+        if ((id2.skip || id1.skip) || (!id1.isNoC && !id2.isNoC)) {
             //reset skipping flags
             id1.skip = false;
             id2.skip = false;
